@@ -1,5 +1,5 @@
 [package]
-name = "graph_based_image_segmentation"
+name = "graph-based-image-segmentation"
 version = "0.1.0"
 authors = ["Markus Mayer <widemeadows@gmail.com>"]
 edition = "2018"

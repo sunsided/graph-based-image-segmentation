@@ -204,6 +204,9 @@ impl Nodes {
             l = token.id;
         }
 
+        // TODO: If the found component is identical to the originally provided index, we must not borrow again.
+        assert_ne!(l, index);
+
         let s = self.nodes[l].borrow_mut();
         assert_eq!(s.l, s.id);
 

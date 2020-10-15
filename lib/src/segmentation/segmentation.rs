@@ -1,6 +1,6 @@
 use crate::graph::{ImageEdge, ImageGraph};
 use crate::segmentation::{Distance, Magic};
-use opencv::core::Vec3b;
+use opencv::core::{Scalar, Vec3b, CV_32SC1};
 use opencv::prelude::*;
 
 /// Implementation of graph based image segmentation as described in the
@@ -131,8 +131,23 @@ where
     /// # Arguments
     ///
     /// * `m` - Minimum segment size in pixels.
-    pub fn enforce_minimum_segment_size(&self, m: usize) {
-        unimplemented!()
+    pub fn enforce_minimum_segment_size(&mut self, m: usize) {
+        let graph = &mut self.graph;
+        assert_ne!(graph.num_nodes(), 0);
+
+        for e in 0..graph.num_edges() {
+            let edge = graph.edges.get_edge_at(e);
+
+            let mut s_n = graph.nodes.find_node_component_at(edge.n);
+            let mut s_m = graph.nodes.find_node_component_at(edge.m);
+
+            if s_m.l != s_n.l {
+                let should_merge = s_n.n < m || s_m.n < m;
+                if should_merge {
+                    graph.merge(&mut s_n, &mut s_m, &edge);
+                }
+            }
+        }
     }
 
     /// Derive labels from the produced oversegmentation.
@@ -141,6 +156,23 @@ where
     ///
     /// Labels as an integer matrix.
     pub fn derive_labels(&self) -> Mat {
-        unimplemented!()
+        let mut labels = Mat::new_rows_cols_with_default(
+            self.height as i32,
+            self.width as i32,
+            CV_32SC1,
+            Scalar::from(0f64),
+        )
+        .unwrap();
+
+        for i in 0..self.height {
+            for j in 0..self.width {
+                let n = self.width * i + j;
+
+                let s_node = self.graph.nodes.find_node_component_at(n);
+                *(labels.at_2d_mut::<i32>(i as i32, j as i32).unwrap()) = s_node.id as i32;
+            }
+        }
+
+        labels
     }
 }
