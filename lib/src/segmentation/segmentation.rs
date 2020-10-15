@@ -105,7 +105,7 @@ where
 
     /// Oversegment the given graph.
     pub fn oversegment_graph(&mut self) {
-        let mut graph = &mut self.graph;
+        let graph = &mut self.graph;
         assert_ne!(graph.num_edges(), 0);
 
         graph.edges.sort_edges();
@@ -113,11 +113,8 @@ where
         for e in 0..graph.num_edges() {
             let edge = graph.edges.get_edge_at(e % graph.num_edges());
 
-            let mut n = graph.nodes.get_node_at_mut(edge.n);
-            let mut s_n = graph.nodes.find_node_component(&mut n);
-
-            let mut m = graph.nodes.get_node_at_mut(edge.m);
-            let mut s_m = graph.nodes.find_node_component(&mut m);
+            let mut s_n = graph.nodes.find_node_component_at(edge.n);
+            let mut s_m = graph.nodes.find_node_component_at(edge.m);
 
             // Are the nodes in different components?
             if s_m.id != s_n.id {
