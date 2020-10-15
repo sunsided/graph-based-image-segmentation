@@ -53,7 +53,7 @@ where
         for i in 0..height {
             for j in 0..width {
                 let node_index = width * i + j;
-                let mut node = self.graph.get_node_at_mut(node_index);
+                let mut node = self.graph.nodes.get_node_at_mut(node_index);
 
                 let bgr = image.at_2d::<Vec3b>(i as i32, j as i32).unwrap().0;
                 node.b = bgr[0];
@@ -72,12 +72,12 @@ where
         for i in 0..height {
             for j in 0..width {
                 let node_index = width * i + j;
-                let node = self.graph.get_node_at(node_index);
+                let node = self.graph.nodes.get_node_at(node_index);
 
                 // Test right neighbor.
                 if i < height - 1 {
                     let other_index = width * (i + 1) + j;
-                    let other = self.graph.get_node_at(other_index);
+                    let other = self.graph.nodes.get_node_at(other_index);
 
                     let weight = self.distance.distance(&node, &other);
                     let edge = ImageEdge::new(node_index, other_index, weight);
@@ -88,7 +88,7 @@ where
                 // Test bottom neighbor.
                 if j < width - 1 {
                     let other_index = width * i + (j + 1);
-                    let other = self.graph.get_node_at(other_index);
+                    let other = self.graph.nodes.get_node_at(other_index);
 
                     let weight = self.distance.distance(&node, &other);
                     let edge = ImageEdge::new(node_index, other_index, weight);
@@ -99,7 +99,7 @@ where
         }
 
         for edge in edges.into_iter() {
-            self.graph.add_edge(edge);
+            self.graph.edges.add_edge(edge);
         }
     }
 
@@ -108,16 +108,16 @@ where
         let mut graph = &mut self.graph;
         assert_ne!(graph.num_edges(), 0);
 
-        graph.sort_edges();
+        graph.edges.sort_edges();
 
         for e in 0..graph.num_edges() {
-            let edge = graph.get_edge_at(e % graph.num_edges());
+            let edge = graph.edges.get_edge_at(e % graph.num_edges());
 
-            let mut n = graph.get_node_at_mut(edge.n);
-            let mut s_n = graph.find_node_component(&mut n);
+            let mut n = graph.nodes.get_node_at_mut(edge.n);
+            let mut s_n = graph.nodes.find_node_component(&mut n);
 
-            let mut m = graph.get_node_at_mut(edge.m);
-            let mut s_m = graph.find_node_component(&mut m);
+            let mut m = graph.nodes.get_node_at_mut(edge.m);
+            let mut s_m = graph.nodes.find_node_component(&mut m);
 
             // Are the nodes in different components?
             if s_m.id != s_n.id {

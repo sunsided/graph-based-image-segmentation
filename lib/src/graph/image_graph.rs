@@ -5,10 +5,20 @@ use crate::graph::{ImageEdge, ImageNode};
 pub struct ImageGraph {
     /// Number of components.
     k: usize,
-    /// All edges in this graph.
-    edges: Vec<ImageEdge>,
     /// All nodes in this graph.
+    pub nodes: Nodes,
+    /// All edges in this graph.
+    pub edges: Edges,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct Nodes {
     nodes: Vec<ImageNode>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct Edges {
+    edges: Vec<ImageEdge>,
 }
 
 impl ImageGraph {
@@ -20,7 +30,7 @@ impl ImageGraph {
     pub fn new_with_nodes(n: usize) -> Self {
         Self {
             k: n,
-            nodes: vec![ImageNode::default(); n],
+            nodes: Nodes::allocated(n),
             ..Self::default()
         }
     }
@@ -75,6 +85,14 @@ impl ImageGraph {
 
         // Update component count.
         self.k -= 1;
+    }
+}
+
+impl Nodes {
+    pub fn allocated(n: usize) -> Self {
+        Self {
+            nodes: vec![ImageNode::default(); n],
+        }
     }
 
     /// Set the node of the given index.
@@ -156,6 +174,12 @@ impl ImageGraph {
         s
     }
 
+    pub fn len(&self) -> usize {
+        self.nodes.len()
+    }
+}
+
+impl Edges {
     /// Add a new edge.
     ///
     /// # Arguments
@@ -163,6 +187,20 @@ impl ImageGraph {
     /// * `edge` - The edge to add.
     pub fn add_edge(&mut self, edge: ImageEdge) {
         self.edges.push(edge)
+    }
+
+    /// Add new edges.
+    ///
+    /// # Arguments
+    ///
+    /// * `edges` - The edges to add.
+    pub fn add_edges<I>(&mut self, edges: I)
+    where
+        I: Iterator<Item = ImageEdge>,
+    {
+        for edge in edges.into_iter() {
+            self.add_edge(edge);
+        }
     }
 
     /// Gets a reference to the n-th edge.
@@ -196,5 +234,9 @@ impl ImageGraph {
     /// Sorts the edges by weight.
     pub fn sort_edges(&mut self) {
         self.edges.sort_by(|a, b| a.w.partial_cmp(&b.w).unwrap());
+    }
+
+    pub fn len(&self) -> usize {
+        self.edges.len()
     }
 }
