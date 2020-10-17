@@ -45,6 +45,7 @@ where
     ///
     /// * `image` - The image to oversegment.
     pub fn build_graph(&mut self, image: &Mat) {
+        assert_eq!(image.empty().unwrap(), false);
         self.height = image.rows() as usize;
         self.width = image.cols() as usize;
         self.graph = self.init_graph_nodes(&image);
@@ -53,8 +54,10 @@ where
 
     // Initializes the graph nodes from the image.
     fn init_graph_nodes(&mut self, image: &Mat) -> ImageGraph {
-        let height = image.rows() as usize;
-        let width = image.cols() as usize;
+        debug_assert_ne!(self.height, 0);
+        debug_assert_ne!(self.width, 0);
+        let width = self.width;
+        let height = self.height;
         let node_count = height * width;
         let graph = ImageGraph::new_with_nodes(node_count);
 
@@ -80,6 +83,8 @@ where
 
     /// Initializes the edges between the nodes in the prepared graph.
     fn init_graph_edges(&mut self) {
+        debug_assert_ne!(self.height, 0);
+        debug_assert_ne!(self.width, 0);
         let height = self.height;
         let width = self.width;
         let graph = &mut self.graph;

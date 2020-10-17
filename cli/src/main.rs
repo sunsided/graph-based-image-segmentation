@@ -5,21 +5,24 @@ use opencv::prelude::*;
 use std::time::Instant;
 
 fn main() {
-    let image = imread("medium.jpg", IMREAD_COLOR).unwrap();
+    let image = imread("data/tree.jpg", IMREAD_COLOR).unwrap();
 
     let threshold = 2000f32; // TODO: Revisit after distance normalization TODOs are addressed
     let mut segmenter = Segmentation::new(EuclideanRGB::default(), MagicThreshold::new(threshold));
 
     let start_bg = Instant::now();
     segmenter.build_graph(&image);
+
     let start_og = Instant::now();
     segmenter.oversegment_graph();
+
     let start_emss = Instant::now();
     segmenter.enforce_minimum_segment_size(10);
+
     let start_dl = Instant::now();
     let labels = segmenter.derive_labels();
-    let done = Instant::now();
 
+    let done = Instant::now();
     let duration_bg = start_og - start_bg;
     let duration_og = start_emss - start_og;
     let duration_emss = start_dl - start_emss;

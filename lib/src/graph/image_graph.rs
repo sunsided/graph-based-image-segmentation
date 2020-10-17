@@ -177,6 +177,7 @@ impl Nodes {
     ///
     /// * `n` - The index of the node.
     /// * `node` - The node to set.
+    #[allow(dead_code)]
     pub fn set(&mut self, n: usize, node: ImageNode) {
         assert!(n < self.nodes.len());
         self.nodes[n].replace(node);
@@ -187,6 +188,7 @@ impl Nodes {
     /// # Arguments
     ///
     /// * `node` - The node to add.
+    #[allow(dead_code)]
     pub fn add(&mut self, node: ImageNode) {
         self.nodes.push(RefCell::new(node))
     }
@@ -245,6 +247,7 @@ impl Nodes {
         l
     }
 
+    /// Returns the number of nodes.
     pub fn len(&self) -> usize {
         self.nodes.len()
     }
@@ -294,6 +297,7 @@ impl Edges {
             .sort_by(|a, b| a.borrow().w.partial_cmp(&b.borrow().w).unwrap());
     }
 
+    /// Returns the number of edges.
     pub fn len(&self) -> usize {
         self.edges.len()
     }
