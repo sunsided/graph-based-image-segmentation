@@ -1,11 +1,15 @@
 use graph_based_image_segmentation::segmentation::{EuclideanRGB, MagicThreshold, Segmentation};
-use opencv::core::{Point, Scalar, Vector, no_array, min_max_loc, CV_8UC1, CV_32SC1, CV_8UC3, Vec3b};
+use opencv::core::{Point, Scalar, Vector, no_array, min_max_loc, CV_8UC1, CV_32SC1, CV_8UC3, Vec3b, Size, BORDER_DEFAULT};
 use opencv::imgcodecs::{imread, imwrite, IMREAD_COLOR};
 use opencv::prelude::*;
 use std::time::Instant;
+use opencv::imgproc::gaussian_blur;
 
 fn main() {
-    let image = imread("data/tree.jpg", IMREAD_COLOR).unwrap();
+    let mut image = imread("data/tree.jpg", IMREAD_COLOR).unwrap();
+
+    // Apply smoothing to suppress digitization artifacts.
+    image = blur_image(&mut image, 0.8f64, 5).unwrap();
 
     let threshold = 2000f32; // TODO: Revisit after distance normalization TODOs are addressed
     let mut segmenter = Segmentation::new(EuclideanRGB::default(), MagicThreshold::new(threshold));
@@ -47,6 +51,12 @@ fn main() {
 
     let contours = draw_contours(&image, &labels).unwrap();
     imwrite("contours.jpg", &contours, &Vector::default()).unwrap();
+}
+
+fn blur_image(image: &Mat, sigma: f64, size: usize) -> opencv::Result<Mat> {
+    let mut blurred = Mat::default()?;
+    gaussian_blur(&image, &mut blurred, Size::new(size as i32, size as i32), sigma, sigma, BORDER_DEFAULT)?;
+    Ok(blurred)
 }
 
 fn draw_contours(image: &Mat, labels: &Mat) -> opencv::Result<Mat> {
