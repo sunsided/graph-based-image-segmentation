@@ -2,7 +2,6 @@ use crate::graph::{ImageEdge, ImageGraph};
 use crate::segmentation::{Distance, Magic};
 use opencv::core::{Scalar, Vec3b, CV_32SC1};
 use opencv::prelude::*;
-use std::borrow::Borrow;
 
 /// Implementation of graph based image segmentation as described in the
 /// paper by Felzenswalb and Huttenlocher.
@@ -39,14 +38,21 @@ where
         }
     }
 
-    /// Build the graph nased on the image, i.e. compute the weights
+    /// Build the graph based on the image, i.e. compute the weights
     /// between pixels using the underlying distance.
     ///
     /// # Arguments
     ///
     /// * `image` - The image to oversegment.
     pub fn build_graph(&mut self, image: &Mat) {
-        let distance = &self.distance;
+        self.height = image.rows() as usize;
+        self.width = image.cols() as usize;
+        self.graph = self.init_graph_nodes(&image);
+        self.init_graph_edges();
+    }
+
+    // Initializes the graph nodes from the image.
+    fn init_graph_nodes(&mut self, image: &Mat) -> ImageGraph {
         let height = image.rows() as usize;
         let width = image.cols() as usize;
         let node_count = height * width;
@@ -63,11 +69,21 @@ where
                 node.r = bgr[2];
 
                 // Initialize label
-                node.l = node_index;
+                node.label = node_index;
                 node.id = node_index;
                 node.n = 1;
             }
         }
+
+        graph
+    }
+
+    /// Initializes the edges between the nodes in the prepared graph.
+    fn init_graph_edges(&mut self) {
+        let height = self.height;
+        let width = self.width;
+        let graph = &mut self.graph;
+        let distance = &self.distance;
 
         let mut edges = Vec::new();
 
@@ -76,7 +92,7 @@ where
                 let node_index = width * i + j;
                 let node = graph.node_at(node_index);
 
-                // Test right neighbor.
+                // Test bottom neighbor.
                 if i < height - 1 {
                     let other_index = width * (i + 1) + j;
                     let other = graph.node_at(other_index);
@@ -87,7 +103,7 @@ where
                     edges.push(edge);
                 }
 
-                // Test bottom neighbor.
+                // Test right neighbor.
                 if j < width - 1 {
                     let other_index = width * i + (j + 1);
                     let other = graph.node_at(other_index);
@@ -101,10 +117,6 @@ where
         }
 
         graph.add_edges(edges.into_iter());
-
-        self.width = width;
-        self.height = height;
-        self.graph = graph;
     }
 
     /// Oversegment the given graph.
@@ -129,11 +141,9 @@ where
 
             // Are the nodes in different components?
             debug_assert_ne!(s_m.id, s_n.id);
-            if s_m.id != s_n.id {
-                let should_merge = self.magic.should_merge(&s_n, &s_m, &edge);
-                if should_merge {
-                    graph.merge(&mut s_n, &mut s_m, &edge);
-                }
+            let should_merge = self.magic.should_merge(&s_n, &s_m, &edge);
+            if should_merge {
+                graph.merge(&mut s_n, &mut s_m, &edge);
             }
         }
     }
@@ -160,12 +170,10 @@ where
             let mut s_n = graph.node_at(s_n_idx).borrow_mut();
             let mut s_m = graph.node_at(s_m_idx).borrow_mut();
 
-            debug_assert_ne!(s_m.l, s_n.l);
-            if s_m.l != s_n.l {
-                let should_merge = s_n.n < m || s_m.n < m;
-                if should_merge {
-                    graph.merge(&mut s_n, &mut s_m, &edge);
-                }
+            debug_assert_ne!(s_m.label, s_n.label);
+            let should_merge = s_n.n < m || s_m.n < m;
+            if should_merge {
+                graph.merge(&mut s_n, &mut s_m, &edge);
             }
         }
     }

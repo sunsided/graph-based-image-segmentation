@@ -76,7 +76,7 @@ impl ImageGraph {
     /// Depending on the used "Distance", some lines may be commented out
     /// to speed up the algorithm.
     pub fn merge(&self, s_n: &mut ImageNode, s_m: &mut ImageNode, e: &ImageEdge) {
-        s_m.l = s_n.id;
+        s_m.label = s_n.id;
 
         // Update count.
         s_n.n += s_m.n;
@@ -207,17 +207,17 @@ impl Nodes {
     pub fn find_component_at(&self, index: usize) -> usize {
         let mut n = self.nodes[index].borrow_mut();
         debug_assert_eq!(n.id, index);
-        if n.l == n.id {
+        if n.label == n.id {
             return index;
         }
 
         // Get component of node n.
-        let mut l = n.l;
+        let mut l = n.label;
         let mut id = n.id;
 
         while l != id {
             let token = self.nodes[l].borrow();
-            l = token.l;
+            l = token.label;
             id = token.id;
         }
 
@@ -225,10 +225,10 @@ impl Nodes {
         debug_assert_ne!(l, index);
 
         let s = self.nodes[l].borrow_mut();
-        debug_assert_eq!(s.l, s.id);
+        debug_assert_eq!(s.label, s.id);
 
         // Save latest component.
-        n.l = s.id;
+        n.label = s.id;
         l
     }
 
