@@ -1,5 +1,5 @@
 use crate::graph::{ImageEdge, ImageNode};
-use std::cell::{Cell, Ref, RefCell, RefMut};
+use std::cell::{Cell, RefCell, RefMut};
 
 /// Represents an image graph, consisting of one node per pixel which are 4-connected.
 #[derive(Debug, Clone, Default)]
@@ -7,9 +7,9 @@ pub struct ImageGraph {
     /// Number of components.
     k: Cell<usize>,
     /// All nodes in this graph.
-    pub nodes: Nodes,
+    nodes: Nodes,
     /// All edges in this graph.
-    pub edges: Edges,
+    edges: Edges,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -88,6 +88,65 @@ impl ImageGraph {
         let new_k = self.k.get() - 1;
         self.k.replace(new_k);
     }
+
+    /// Get a reference to the n-th node.
+    ///
+    /// # Arguments
+    ///
+    /// * `n` - The index of the node.
+    ///
+    /// # Return
+    ///
+    /// The node at index `n`.
+    pub fn node_at(&self, n: usize) -> &RefCell<ImageNode> {
+        self.nodes.at(n)
+    }
+
+    /// Gets a reference to the n-th edge.
+    ///
+    /// # Arguments
+    ///
+    /// * `n` - The index of the edge.
+    ///
+    /// # Return
+    ///
+    /// The edge at index `n`.
+    pub fn edge_at(&self, n: usize) -> &RefCell<ImageEdge> {
+        self.edges.at(n)
+    }
+
+    /// When two nodes get merged, the first node is assigned the id of the second
+    /// node as label. By traversing this labeling, the current component of each
+    /// node (that is, pixel) can easily be identified and the label can be updated
+    /// for efficiency.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The index of the node to find the component for.
+    ///
+    /// # Returns
+    ///
+    /// The node representing the found component.
+    pub fn find_node_component_at(&self, index: usize) -> usize {
+        self.nodes.find_component_at(index)
+    }
+
+    /// Add new edges.
+    ///
+    /// # Arguments
+    ///
+    /// * `edges` - The edges to add.
+    pub fn add_edges<I>(&mut self, edges: I)
+        where
+            I: Iterator<Item = ImageEdge>,
+    {
+        self.edges.add_many(edges)
+    }
+
+    /// Sorts the edges by weight.
+    pub fn sort_edges(&mut self) {
+        self.edges.sort_by_weight()
+    }
 }
 
 impl Nodes {
@@ -105,7 +164,7 @@ impl Nodes {
     ///
     /// * `n` - The index of the node.
     /// * `node` - The node to set.
-    pub fn set_node(&mut self, n: usize, node: ImageNode) {
+    pub fn set(&mut self, n: usize, node: ImageNode) {
         assert!(n < self.nodes.len());
         self.nodes[n].replace(node);
     }
@@ -115,7 +174,7 @@ impl Nodes {
     /// # Arguments
     ///
     /// * `node` - The node to add.
-    pub fn add_node(&mut self, node: ImageNode) {
+    pub fn add(&mut self, node: ImageNode) {
         self.nodes.push(RefCell::new(node))
     }
 
@@ -128,40 +187,9 @@ impl Nodes {
     /// # Return
     ///
     /// The node at index `n`.
-    pub fn get_node_at(&self, n: usize) -> &RefCell<ImageNode> {
+    pub fn at(&self, n: usize) -> &RefCell<ImageNode> {
         assert!(n < self.nodes.len());
         &self.nodes[n]
-    }
-
-    /// When two nodes get merged, the first node is assigned the id of the second
-    /// node as label. By traversing this labeling, the current component of each
-    /// node (that is, pixel) can easily be identified and the label can be updated
-    /// for efficiency.
-    ///
-    /// # Arguments
-    ///
-    /// * `n` - The node to find the component for.
-    ///
-    /// # Returns
-    ///
-    /// The node representing the found component.
-    pub fn find_node_component(&self, n: &mut ImageNode) -> RefMut<ImageNode> {
-        // Get component of node n.
-        let mut l = n.l;
-        let mut id = n.id;
-
-        while l != id {
-            let token = self.nodes[l].borrow();
-            id = token.id;
-            l = token.l;
-        }
-
-        let s = self.nodes[l].borrow_mut();
-        assert_eq!(s.l, s.id);
-
-        // Save latest component.
-        n.l = s.id;
-        s
     }
 
     /// When two nodes get merged, the first node is assigned the id of the second
@@ -176,7 +204,7 @@ impl Nodes {
     /// # Returns
     ///
     /// The node representing the found component.
-    pub fn find_node_component_at(&self, index: usize) -> usize {
+    pub fn find_component_at(&self, index: usize) -> usize {
         let mut n = self.nodes[index].borrow_mut();
         debug_assert_eq!(n.id, index);
         if n.l == n.id {
@@ -215,7 +243,7 @@ impl Edges {
     /// # Arguments
     ///
     /// * `edge` - The edge to add.
-    pub fn add_edge(&mut self, edge: ImageEdge) {
+    pub fn add(&mut self, edge: ImageEdge) {
         self.edges.push(RefCell::new(edge))
     }
 
@@ -224,12 +252,12 @@ impl Edges {
     /// # Arguments
     ///
     /// * `edges` - The edges to add.
-    pub fn add_edges<I>(&mut self, edges: I)
+    pub fn add_many<I>(&mut self, edges: I)
     where
         I: Iterator<Item = ImageEdge>,
     {
         for edge in edges.into_iter() {
-            self.add_edge(edge);
+            self.add(edge);
         }
     }
 
@@ -242,13 +270,13 @@ impl Edges {
     /// # Return
     ///
     /// The edge at index `n`.
-    pub fn get_edge_at(&self, n: usize) -> Ref<ImageEdge> {
+    pub fn at(&self, n: usize) -> &RefCell<ImageEdge> {
         assert!(n < self.edges.len());
-        self.edges[n].borrow()
+        &self.edges[n]
     }
 
     /// Sorts the edges by weight.
-    pub fn sort_edges(&mut self) {
+    pub fn sort_by_weight(&mut self) {
         self.edges
             .sort_by(|a, b| a.borrow().w.partial_cmp(&b.borrow().w).unwrap());
     }

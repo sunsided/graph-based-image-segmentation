@@ -2,6 +2,7 @@ use crate::graph::{ImageEdge, ImageGraph};
 use crate::segmentation::{Distance, Magic};
 use opencv::core::{Scalar, Vec3b, CV_32SC1};
 use opencv::prelude::*;
+use std::borrow::Borrow;
 
 /// Implementation of graph based image segmentation as described in the
 /// paper by Felzenswalb and Huttenlocher.
@@ -45,18 +46,16 @@ where
     ///
     /// * `image` - The image to oversegment.
     pub fn build_graph(&mut self, image: &Mat) {
+        let distance = &self.distance;
         let height = image.rows() as usize;
         let width = image.cols() as usize;
         let node_count = height * width;
-
-        self.width = width;
-        self.height = height;
-        self.graph = ImageGraph::new_with_nodes(node_count);
+        let mut graph = ImageGraph::new_with_nodes(node_count);
 
         for i in 0..height {
             for j in 0..width {
                 let node_index = width * i + j;
-                let mut node = self.graph.nodes.get_node_at(node_index).borrow_mut();
+                let mut node = graph.node_at(node_index).borrow_mut();
 
                 let bgr = image.at_2d::<Vec3b>(i as i32, j as i32).unwrap().0;
                 node.b = bgr[0];
@@ -75,14 +74,14 @@ where
         for i in 0..height {
             for j in 0..width {
                 let node_index = width * i + j;
-                let node = self.graph.nodes.get_node_at(node_index);
+                let node = graph.node_at(node_index);
 
                 // Test right neighbor.
                 if i < height - 1 {
                     let other_index = width * (i + 1) + j;
-                    let other = self.graph.nodes.get_node_at(other_index);
+                    let other = graph.node_at(other_index);
 
-                    let weight = self.distance.distance(&node.borrow(), &other.borrow());
+                    let weight = distance.distance(&node.borrow(), &other.borrow());
                     let edge = ImageEdge::new(node_index, other_index, weight);
 
                     edges.push(edge);
@@ -91,9 +90,9 @@ where
                 // Test bottom neighbor.
                 if j < width - 1 {
                     let other_index = width * i + (j + 1);
-                    let other = self.graph.nodes.get_node_at(other_index);
+                    let other = graph.node_at(other_index);
 
-                    let weight = self.distance.distance(&node.borrow(), &other.borrow());
+                    let weight = distance.distance(&node.borrow(), &other.borrow());
                     let edge = ImageEdge::new(node_index, other_index, weight);
 
                     edges.push(edge);
@@ -101,9 +100,11 @@ where
             }
         }
 
-        for edge in edges.into_iter() {
-            self.graph.edges.add_edge(edge);
-        }
+        graph.add_edges(edges.into_iter());
+
+        self.width = width;
+        self.height = height;
+        self.graph = graph;
     }
 
     /// Oversegment the given graph.
@@ -111,20 +112,20 @@ where
         let graph = &mut self.graph;
         assert_ne!(graph.num_edges(), 0);
 
-        graph.edges.sort_edges();
+        graph.sort_edges();
 
         for e in 0..graph.num_edges() {
-            let edge = graph.edges.get_edge_at(e % graph.num_edges());
+            let edge = graph.edge_at(e % graph.num_edges()).borrow();
 
-            let s_n_idx = graph.nodes.find_node_component_at(edge.n);
-            let s_m_idx = graph.nodes.find_node_component_at(edge.m);
+            let s_n_idx = graph.find_node_component_at(edge.n);
+            let s_m_idx = graph.find_node_component_at(edge.m);
 
             if s_n_idx == s_m_idx {
                 continue;
             }
 
-            let mut s_n = graph.nodes.get_node_at(s_n_idx).borrow_mut();
-            let mut s_m = graph.nodes.get_node_at(s_m_idx).borrow_mut();
+            let mut s_n = graph.node_at(s_n_idx).borrow_mut();
+            let mut s_m = graph.node_at(s_m_idx).borrow_mut();
 
             // Are the nodes in different components?
             debug_assert_ne!(s_m.id, s_n.id);
@@ -147,17 +148,17 @@ where
         assert_ne!(graph.num_nodes(), 0);
 
         for e in 0..graph.num_edges() {
-            let edge = graph.edges.get_edge_at(e);
+            let edge = graph.edge_at(e).borrow();
 
-            let s_n_idx = graph.nodes.find_node_component_at(edge.n);
-            let s_m_idx = graph.nodes.find_node_component_at(edge.m);
+            let s_n_idx = graph.find_node_component_at(edge.n);
+            let s_m_idx = graph.find_node_component_at(edge.m);
 
             if s_n_idx == s_m_idx {
                 continue;
             }
 
-            let mut s_n = graph.nodes.get_node_at(s_n_idx).borrow_mut();
-            let mut s_m = graph.nodes.get_node_at(s_m_idx).borrow_mut();
+            let mut s_n = graph.node_at(s_n_idx).borrow_mut();
+            let mut s_m = graph.node_at(s_m_idx).borrow_mut();
 
             debug_assert_ne!(s_m.l, s_n.l);
             if s_m.l != s_n.l {
@@ -187,8 +188,8 @@ where
             for j in 0..self.width {
                 let n = self.width * i + j;
 
-                let s_node_idx = self.graph.nodes.find_node_component_at(n);
-                let s_node = self.graph.nodes.get_node_at(s_node_idx).borrow();
+                let s_node_idx = self.graph.find_node_component_at(n);
+                let s_node = self.graph.node_at(s_node_idx).borrow();
                 let label = s_node.id as i32;
 
                 *(labels.at_2d_mut(i as i32, j as i32).unwrap()) = label;
