@@ -56,7 +56,7 @@ where
         let height = image.rows() as usize;
         let width = image.cols() as usize;
         let node_count = height * width;
-        let mut graph = ImageGraph::new_with_nodes(node_count);
+        let graph = ImageGraph::new_with_nodes(node_count);
 
         for i in 0..height {
             for j in 0..width {
@@ -196,11 +196,10 @@ where
             for j in 0..self.width {
                 let n = self.width * i + j;
 
-                let s_node_idx = self.graph.find_node_component_at(n);
-                let s_node = self.graph.node_at(s_node_idx).borrow();
-                let label = s_node.id as i32;
+                let index = self.graph.find_node_component_at(n);
+                let id = self.graph.node_id_at(index) as i32;
 
-                *(labels.at_2d_mut(i as i32, j as i32).unwrap()) = label;
+                *(labels.at_2d_mut(i as i32, j as i32).unwrap()) = id;
             }
         }
 

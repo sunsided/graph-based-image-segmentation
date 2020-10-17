@@ -1,5 +1,5 @@
 use crate::graph::{ImageEdge, ImageNode};
-use std::cell::{Cell, RefCell, RefMut};
+use std::cell::{Cell, RefCell};
 
 /// Represents an image graph, consisting of one node per pixel which are 4-connected.
 #[derive(Debug, Clone, Default)]
@@ -100,6 +100,19 @@ impl ImageGraph {
     /// The node at index `n`.
     pub fn node_at(&self, n: usize) -> &RefCell<ImageNode> {
         self.nodes.at(n)
+    }
+
+    /// Get the ID of the n-th node.
+    ///
+    /// # Arguments
+    ///
+    /// * `n` - The index of the node.
+    ///
+    /// # Return
+    ///
+    /// The ID of the node at index `n`.
+    pub fn node_id_at(&self, n: usize) -> usize {
+        self.nodes.at(n).borrow().id
     }
 
     /// Gets a reference to the n-th edge.
