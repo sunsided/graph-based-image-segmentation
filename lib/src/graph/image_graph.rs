@@ -128,24 +128,9 @@ impl Nodes {
     /// # Return
     ///
     /// The node at index `n`.
-    pub fn get_node_at(&self, n: usize) -> Ref<ImageNode> {
+    pub fn get_node_at(&self, n: usize) -> &RefCell<ImageNode> {
         assert!(n < self.nodes.len());
-        self.nodes[n].borrow()
-    }
-
-    /// Get a mutable reference to the n-th node.
-    ///
-    /// # Arguments
-    ///
-    /// * `n` - The index of the node.
-    ///
-    /// # Return
-    ///
-    /// The node at index `n`.
-    #[inline(always)]
-    pub fn get_node_at_mut(&mut self, n: usize) -> RefMut<ImageNode> {
-        assert!(n < self.nodes.len());
-        self.nodes[n].borrow_mut()
+        &self.nodes[n]
     }
 
     /// When two nodes get merged, the first node is assigned the id of the second
@@ -191,8 +176,12 @@ impl Nodes {
     /// # Returns
     ///
     /// The node representing the found component.
-    pub fn find_node_component_at(&self, index: usize) -> RefMut<ImageNode> {
+    pub fn find_node_component_at(&self, index: usize) -> usize {
         let mut n = self.nodes[index].borrow_mut();
+        debug_assert_eq!(n.id, index);
+        if n.l == n.id {
+            return index;
+        }
 
         // Get component of node n.
         let mut l = n.l;
@@ -200,19 +189,19 @@ impl Nodes {
 
         while l != id {
             let token = self.nodes[l].borrow();
+            l = token.l;
             id = token.id;
-            l = token.id;
         }
 
-        // TODO: If the found component is identical to the originally provided index, we must not borrow again.
-        assert_ne!(l, index);
+        // If the found component is identical to the originally provided index, we must not borrow again.
+        debug_assert_ne!(l, index);
 
         let s = self.nodes[l].borrow_mut();
-        assert_eq!(s.l, s.id);
+        debug_assert_eq!(s.l, s.id);
 
         // Save latest component.
         n.l = s.id;
-        s
+        l
     }
 
     pub fn len(&self) -> usize {

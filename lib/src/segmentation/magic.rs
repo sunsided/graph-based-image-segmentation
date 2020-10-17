@@ -18,5 +18,5 @@ pub trait Magic {
     /// `true` if merge
     // TODO: Rename the method.
     // TODO: Update the documentation on the return value.
-    fn magic(&self, s_n: &ImageNode, s_m: &ImageNode, e: &ImageEdge) -> bool;
+    fn should_merge(&self, s_n: &ImageNode, s_m: &ImageNode, e: &ImageEdge) -> bool;
 }

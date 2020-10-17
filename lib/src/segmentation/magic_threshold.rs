@@ -22,7 +22,7 @@ impl MagicThreshold {
 }
 
 impl Magic for MagicThreshold {
-    fn magic(&self, s_n: &ImageNode, s_m: &ImageNode, e: &ImageEdge) -> bool {
+    fn should_merge(&self, s_n: &ImageNode, s_m: &ImageNode, e: &ImageEdge) -> bool {
         let threshold = (s_n.max_w + self.c / s_n.n as f32).min(s_m.max_w + self.c / s_m.n as f32);
         e.w < threshold
     }

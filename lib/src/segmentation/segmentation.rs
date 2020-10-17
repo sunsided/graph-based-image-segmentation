@@ -48,12 +48,15 @@ where
         let height = image.rows() as usize;
         let width = image.cols() as usize;
         let node_count = height * width;
+
+        self.width = width;
+        self.height = height;
         self.graph = ImageGraph::new_with_nodes(node_count);
 
         for i in 0..height {
             for j in 0..width {
                 let node_index = width * i + j;
-                let mut node = self.graph.nodes.get_node_at_mut(node_index);
+                let mut node = self.graph.nodes.get_node_at(node_index).borrow_mut();
 
                 let bgr = image.at_2d::<Vec3b>(i as i32, j as i32).unwrap().0;
                 node.b = bgr[0];
@@ -79,7 +82,7 @@ where
                     let other_index = width * (i + 1) + j;
                     let other = self.graph.nodes.get_node_at(other_index);
 
-                    let weight = self.distance.distance(&node, &other);
+                    let weight = self.distance.distance(&node.borrow(), &other.borrow());
                     let edge = ImageEdge::new(node_index, other_index, weight);
 
                     edges.push(edge);
@@ -90,7 +93,7 @@ where
                     let other_index = width * i + (j + 1);
                     let other = self.graph.nodes.get_node_at(other_index);
 
-                    let weight = self.distance.distance(&node, &other);
+                    let weight = self.distance.distance(&node.borrow(), &other.borrow());
                     let edge = ImageEdge::new(node_index, other_index, weight);
 
                     edges.push(edge);
@@ -113,12 +116,20 @@ where
         for e in 0..graph.num_edges() {
             let edge = graph.edges.get_edge_at(e % graph.num_edges());
 
-            let mut s_n = graph.nodes.find_node_component_at(edge.n);
-            let mut s_m = graph.nodes.find_node_component_at(edge.m);
+            let s_n_idx = graph.nodes.find_node_component_at(edge.n);
+            let s_m_idx = graph.nodes.find_node_component_at(edge.m);
+
+            if s_n_idx == s_m_idx {
+                continue;
+            }
+
+            let mut s_n = graph.nodes.get_node_at(s_n_idx).borrow_mut();
+            let mut s_m = graph.nodes.get_node_at(s_m_idx).borrow_mut();
 
             // Are the nodes in different components?
+            debug_assert_ne!(s_m.id, s_n.id);
             if s_m.id != s_n.id {
-                let should_merge = self.magic.magic(&s_n, &s_m, &edge);
+                let should_merge = self.magic.should_merge(&s_n, &s_m, &edge);
                 if should_merge {
                     graph.merge(&mut s_n, &mut s_m, &edge);
                 }
@@ -138,9 +149,17 @@ where
         for e in 0..graph.num_edges() {
             let edge = graph.edges.get_edge_at(e);
 
-            let mut s_n = graph.nodes.find_node_component_at(edge.n);
-            let mut s_m = graph.nodes.find_node_component_at(edge.m);
+            let s_n_idx = graph.nodes.find_node_component_at(edge.n);
+            let s_m_idx = graph.nodes.find_node_component_at(edge.m);
 
+            if s_n_idx == s_m_idx {
+                continue;
+            }
+
+            let mut s_n = graph.nodes.get_node_at(s_n_idx).borrow_mut();
+            let mut s_m = graph.nodes.get_node_at(s_m_idx).borrow_mut();
+
+            debug_assert_ne!(s_m.l, s_n.l);
             if s_m.l != s_n.l {
                 let should_merge = s_n.n < m || s_m.n < m;
                 if should_merge {
@@ -168,8 +187,11 @@ where
             for j in 0..self.width {
                 let n = self.width * i + j;
 
-                let s_node = self.graph.nodes.find_node_component_at(n);
-                *(labels.at_2d_mut::<i32>(i as i32, j as i32).unwrap()) = s_node.id as i32;
+                let s_node_idx = self.graph.nodes.find_node_component_at(n);
+                let s_node = self.graph.nodes.get_node_at(s_node_idx).borrow();
+                let label = s_node.id as i32;
+
+                *(labels.at_2d_mut(i as i32, j as i32).unwrap()) = label;
             }
         }
 
