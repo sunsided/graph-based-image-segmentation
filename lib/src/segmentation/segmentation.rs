@@ -133,7 +133,13 @@ where
         graph.sort_edges();
 
         for e in 0..graph.num_edges() {
-            let edge = graph.edge_at(e % graph.num_edges()).borrow();
+            debug_assert_eq!(e % graph.num_edges(), e);
+            let edge_cell = graph.edge_at(e);
+
+            // SAFETY: The edge is only borrow immutably here, and none of the
+            //         node lookup methods on the graph operate on edges.
+            //         Since each edge is only processed once, we can safely borrow "unsafely".
+            let edge = unsafe { edge_cell.try_borrow_unguarded().unwrap() };
 
             let s_n_idx = graph.find_node_component_at(edge.n);
             let s_m_idx = graph.find_node_component_at(edge.m);

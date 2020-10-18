@@ -311,9 +311,15 @@ impl Edges {
     pub fn sort_by_weight(&mut self) {
         self.edges
             .sort_by(|a, b| {
-                let w_a = a.borrow().w;
-                let w_b = b.borrow().w;
-                w_a.partial_cmp(&w_b).unwrap()
+                let a = a.borrow();
+                let b = b.borrow();
+
+                // Main sorting is by edge weight ascending.
+                // In order to improve cache coherency during processing, we then sort by index.
+                let ord_w = a.w.partial_cmp(&b.w).unwrap();
+                let ord_n = a.n.partial_cmp(&b.n).unwrap();
+                let ord_m = a.m.partial_cmp(&b.m).unwrap();
+                ord_w.then(ord_n).then(ord_m)
             });
     }
 
