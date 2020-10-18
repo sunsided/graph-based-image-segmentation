@@ -21,6 +21,8 @@ where
     distance: D,
     /// The magic part of graph segmentation.
     magic: M,
+    /// The minimum size of the segments, in pixels.
+    segment_size: usize,
 }
 
 impl<D, M> Segmentation<D, M>
@@ -28,12 +30,13 @@ where
     D: Distance,
     M: Magic,
 {
-    pub fn new(distance: D, magic: M) -> Self {
+    pub fn new(distance: D, magic: M, segment_size: usize) -> Self {
         Self {
             distance,
             magic,
             height: 0,
             width: 0,
+            segment_size,
             graph: ImageGraph::default(),
         }
     }
@@ -44,7 +47,24 @@ where
     /// # Arguments
     ///
     /// * `image` - The image to oversegment.
-    pub fn build_graph(&mut self, image: &Mat) {
+    ///
+    /// # Returns
+    ///
+    /// A matrix in `CV_32SC1` format containing the labels for each pixel.
+    pub fn segment_image(&mut self, image: &Mat) -> Mat {
+        self.build_graph(&image);
+        self.oversegment_graph();
+        self.enforce_minimum_segment_size(10);
+        self.derive_labels()
+    }
+
+    /// Build the graph based on the image, i.e. compute the weights
+    /// between pixels using the underlying distance.
+    ///
+    /// # Arguments
+    ///
+    /// * `image` - The image to oversegment.
+    fn build_graph(&mut self, image: &Mat) {
         assert_eq!(image.empty().unwrap(), false);
         self.height = image.rows() as usize;
         self.width = image.cols() as usize;
@@ -126,7 +146,7 @@ where
     }
 
     /// Oversegment the given graph.
-    pub fn oversegment_graph(&mut self) {
+    fn oversegment_graph(&mut self) {
         let graph = &mut self.graph;
         assert_ne!(graph.num_edges(), 0);
 
@@ -165,7 +185,7 @@ where
     /// # Arguments
     ///
     /// * `segment_size` - Minimum segment size in pixels.
-    pub fn enforce_minimum_segment_size(&mut self, segment_size: usize) {
+    fn enforce_minimum_segment_size(&mut self, segment_size: usize) {
         let graph = &mut self.graph;
         assert_ne!(graph.num_nodes(), 0);
 
@@ -197,7 +217,7 @@ where
     /// # Returns
     ///
     /// Labels as an integer matrix.
-    pub fn derive_labels(&self) -> Mat {
+    fn derive_labels(&self) -> Mat {
         let mut labels = Mat::new_rows_cols_with_default(
             self.height as i32,
             self.width as i32,

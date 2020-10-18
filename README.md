@@ -18,3 +18,22 @@ which in turn was used in \[2] for evaluation.
     Superpixels: An Evaluation of the State-of-the-Art.
     Computer Vision and Image Understanding, 2018.
 ```
+
+## Example use
+
+```rust
+fn main() {
+    let mut image = imread("data/tree.jpg", IMREAD_COLOR).unwrap();
+
+    let threshold = 10f32;
+    let segment_size = 10;
+    let mut segmenter = Segmentation::new(
+        EuclideanRGB::default(),
+        MagicThreshold::new(threshold),
+        segment_size,
+    );
+
+    // NOTE: The image should be blurred before use; this is left out here for brevity.
+    let labels = segmenter.segment_image(&image);
+}
+```

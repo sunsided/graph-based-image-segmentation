@@ -3,16 +3,16 @@ use crate::segmentation::Distance;
 
 /// Euclidean RGB distance.
 #[derive(Debug, Clone, Copy)]
-pub struct EuclideanRGB {
-    /// Normalization term.
-    d: f32, // TODO: Unused
-}
+pub struct EuclideanRGB {}
+
+unsafe impl Sync for EuclideanRGB {}
+unsafe impl Send for EuclideanRGB {}
+
+const NORMALIZATION_TERM: f32 = 441.6729559300637f32; // (255f32 * 255f32 * 3f32).sqrt();
 
 impl Default for EuclideanRGB {
     fn default() -> Self {
-        Self {
-            d: (255f32 * 255f32 * 3f32).sqrt(),
-        }
+        Self {}
     }
 }
 
@@ -21,6 +21,6 @@ impl Distance for EuclideanRGB {
         let dr = n.r as f32 - m.r as f32;
         let dg = n.g as f32 - m.g as f32;
         let db = n.b as f32 - m.b as f32;
-        (dr * dr + dg * dg + db * db).sqrt()
+        (dr * dr + dg * dg + db * db).sqrt() / NORMALIZATION_TERM
     }
 }

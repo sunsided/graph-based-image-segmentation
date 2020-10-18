@@ -1,9 +1,12 @@
 use graph_based_image_segmentation::segmentation::{EuclideanRGB, MagicThreshold, Segmentation};
-use opencv::core::{Point, Scalar, Vector, no_array, min_max_loc, CV_8UC1, CV_32SC1, CV_8UC3, Vec3b, Size, BORDER_DEFAULT};
+use opencv::core::{
+    min_max_loc, no_array, Point, Scalar, Size, Vec3b, Vector, BORDER_DEFAULT, CV_32SC1, CV_8UC1,
+    CV_8UC3,
+};
 use opencv::imgcodecs::{imread, imwrite, IMREAD_COLOR};
+use opencv::imgproc::gaussian_blur;
 use opencv::prelude::*;
 use std::time::Instant;
-use opencv::imgproc::gaussian_blur;
 
 fn main() {
     let mut image = imread("data/tree.jpg", IMREAD_COLOR).unwrap();
@@ -11,43 +14,46 @@ fn main() {
     // Apply smoothing to suppress digitization artifacts.
     image = blur_image(&mut image, 0.8f64, 5).unwrap();
 
-    let threshold = 2000f32; // TODO: Revisit after distance normalization TODOs are addressed
-    let mut segmenter = Segmentation::new(EuclideanRGB::default(), MagicThreshold::new(threshold));
+    let threshold = 10f32;
+    let segment_size = 10;
+    let mut segmenter = Segmentation::new(
+        EuclideanRGB::default(),
+        MagicThreshold::new(threshold),
+        segment_size,
+    );
 
-    let start_bg = Instant::now();
-    segmenter.build_graph(&image);
-
-    let start_og = Instant::now();
-    segmenter.oversegment_graph();
-
-    let start_emss = Instant::now();
-    segmenter.enforce_minimum_segment_size(10);
-
-    let start_dl = Instant::now();
-    let labels = segmenter.derive_labels();
-
+    let start = Instant::now();
+    let labels = segmenter.segment_image(&image);
     let done = Instant::now();
-    let duration_bg = start_og - start_bg;
-    let duration_og = start_emss - start_og;
-    let duration_emss = start_dl - start_emss;
-    let duration_dl = done - start_dl;
-    let duration = done - start_bg;
 
-    println!("Image size:         {} x {} = {} pixels", image.cols(), image.rows(), image.cols() * image.rows());
-    println!("Building the graph: {} ms", duration_bg.as_millis());
-    println!("Oversegmentation:   {} ms", duration_og.as_millis());
-    println!("Segment size:       {} ms", duration_emss.as_millis());
-    println!("Label extraction:   {} ms", duration_dl.as_millis());
-    println!("Total:              {} ms", duration.as_millis());
+    let duration = done - start;
+
+    println!(
+        "Image size:         {} x {} = {} pixels",
+        image.cols(),
+        image.rows(),
+        image.cols() * image.rows()
+    );
+    println!("Duration:      {} ms", duration.as_millis());
 
     let mut min = 0f64;
     let mut max = 0f64;
     let mut min_loc = Point::default();
     let mut max_loc = Point::default();
-    min_max_loc(&labels, &mut min, &mut max, &mut min_loc, &mut max_loc, &no_array().unwrap()).unwrap();
+    min_max_loc(
+        &labels,
+        &mut min,
+        &mut max,
+        &mut min_loc,
+        &mut max_loc,
+        &no_array().unwrap(),
+    )
+    .unwrap();
 
     let mut labels_out = Mat::default().unwrap();
-    labels.convert_to(&mut labels_out, CV_8UC1, 255f64/max, 0f64).unwrap();
+    labels
+        .convert_to(&mut labels_out, CV_8UC1, 255f64 / max, 0f64)
+        .unwrap();
     imwrite("labels.jpg", &labels_out, &Vector::default()).unwrap();
 
     let contours = draw_contours(&image, &labels).unwrap();
@@ -56,7 +62,14 @@ fn main() {
 
 fn blur_image(image: &Mat, sigma: f64, size: usize) -> opencv::Result<Mat> {
     let mut blurred = Mat::default()?;
-    gaussian_blur(&image, &mut blurred, Size::new(size as i32, size as i32), sigma, sigma, BORDER_DEFAULT)?;
+    gaussian_blur(
+        &image,
+        &mut blurred,
+        Size::new(size as i32, size as i32),
+        sigma,
+        sigma,
+        BORDER_DEFAULT,
+    )?;
     Ok(blurred)
 }
 
@@ -67,15 +80,15 @@ fn draw_contours(image: &Mat, labels: &Mat) -> opencv::Result<Mat> {
     assert_eq!(image.cols(), labels.cols());
     assert_eq!(labels.typ()?, CV_32SC1);
 
-    let mut contours = Mat::new_rows_cols_with_default(image.rows(), image.cols(), CV_8UC3, Scalar::all(0f64))?;
+    let mut contours =
+        Mat::new_rows_cols_with_default(image.rows(), image.cols(), CV_8UC3, Scalar::all(0f64))?;
     let color = Vec3b::all(0); // black contours
 
     for i in 0..contours.rows() {
         for j in 0..contours.cols() {
             if is_4connected_boundary_pixel(&labels, i, j)? {
                 *contours.at_2d_mut::<Vec3b>(i, j)? = color;
-            }
-            else {
+            } else {
                 *contours.at_2d_mut::<Vec3b>(i, j)? = *image.at_2d::<Vec3b>(i, j)?;
             }
         }
