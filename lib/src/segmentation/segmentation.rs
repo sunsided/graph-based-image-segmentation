@@ -52,7 +52,7 @@ where
         self.init_graph_edges();
     }
 
-    // Initializes the graph nodes from the image.
+    /// Initializes the graph nodes from the image.
     fn init_graph_nodes(&mut self, image: &Mat) -> ImageGraph {
         debug_assert_ne!(self.height, 0);
         debug_assert_ne!(self.width, 0);
@@ -121,6 +121,7 @@ where
             }
         }
 
+        graph.clear_edges();
         graph.add_edges(edges.into_iter());
     }
 

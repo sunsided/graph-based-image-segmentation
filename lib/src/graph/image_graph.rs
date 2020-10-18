@@ -36,6 +36,17 @@ impl ImageGraph {
         }
     }
 
+    /// Resets the image graph with the given exact number of nodes.
+    ///
+    /// # Arguments
+    ///
+    /// * `n` - The number of nodes to allocate.
+    pub fn reset(&mut self, n: usize) {
+        self.k.replace(n);
+        self.nodes = Nodes::allocated(n);
+        self.edges.clear();
+    }
+
     /// Get the number of nodes.
     ///
     /// # Return
@@ -154,6 +165,11 @@ impl ImageGraph {
             I: Iterator<Item = ImageEdge>,
     {
         self.edges.add_many(edges)
+    }
+
+    /// Removes all edges.
+    pub fn clear_edges(&mut self) {
+        self.edges.clear();
     }
 
     /// Sorts the edges by weight.
@@ -299,6 +315,11 @@ impl Edges {
                 let w_b = b.borrow().w;
                 w_a.partial_cmp(&w_b).unwrap()
             });
+    }
+
+    /// Removes all edges.
+    pub fn clear(&mut self) {
+        self.edges.clear()
     }
 
     /// Returns the number of edges.
