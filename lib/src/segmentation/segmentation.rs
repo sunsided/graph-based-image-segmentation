@@ -97,9 +97,9 @@ where
                 let node_index = width * i + j;
                 let node = graph.node_at(node_index);
 
-                // Test bottom neighbor.
-                if i < height - 1 {
-                    let other_index = width * (i + 1) + j;
+                // Test right neighbor.
+                if j < width - 1 {
+                    let other_index = width * i + (j + 1);
                     let other = graph.node_at(other_index);
 
                     let weight = distance.distance(&node.borrow(), &other.borrow());
@@ -108,9 +108,9 @@ where
                     edges.push(edge);
                 }
 
-                // Test right neighbor.
-                if j < width - 1 {
-                    let other_index = width * i + (j + 1);
+                // Test bottom neighbor.
+                if i < height - 1 {
+                    let other_index = width * (i + 1) + j;
                     let other = graph.node_at(other_index);
 
                     let weight = distance.distance(&node.borrow(), &other.borrow());
