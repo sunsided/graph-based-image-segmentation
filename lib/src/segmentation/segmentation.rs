@@ -157,8 +157,8 @@ where
     ///
     /// # Arguments
     ///
-    /// * `m` - Minimum segment size in pixels.
-    pub fn enforce_minimum_segment_size(&mut self, m: usize) {
+    /// * `segment_size` - Minimum segment size in pixels.
+    pub fn enforce_minimum_segment_size(&mut self, segment_size: usize) {
         let graph = &mut self.graph;
         assert_ne!(graph.num_nodes(), 0);
 
@@ -175,9 +175,11 @@ where
             let mut s_n = graph.node_at(s_n_idx).borrow_mut();
             let mut s_m = graph.node_at(s_m_idx).borrow_mut();
 
+            // Neighboring segments must have different labels.
             debug_assert_ne!(s_m.label, s_n.label);
-            let should_merge = s_n.n < m || s_m.n < m;
-            if should_merge {
+
+            let segment_too_small = s_n.n < segment_size || s_m.n < segment_size;
+            if segment_too_small {
                 graph.merge(&mut s_n, &mut s_m, &edge);
             }
         }

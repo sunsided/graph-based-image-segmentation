@@ -23,7 +23,11 @@ impl MagicThreshold {
 
 impl Magic for MagicThreshold {
     fn should_merge(&self, s_n: &ImageNode, s_m: &ImageNode, e: &ImageEdge) -> bool {
-        let threshold = (s_n.max_w + self.c / s_n.n as f32).min(s_m.max_w + self.c / s_m.n as f32);
+        let threshold_n = s_n.max_w + self.c / s_n.n as f32;
+        let threshold_m = s_m.max_w + self.c / s_m.n as f32;
+
+        // Edge weight muss be smaller than both thresholds.
+        let threshold = threshold_n.min(threshold_m);
         e.w < threshold
     }
 }

@@ -294,7 +294,11 @@ impl Edges {
     /// Sorts the edges by weight.
     pub fn sort_by_weight(&mut self) {
         self.edges
-            .sort_by(|a, b| a.borrow().w.partial_cmp(&b.borrow().w).unwrap());
+            .sort_by(|a, b| {
+                let w_a = a.borrow().w;
+                let w_b = b.borrow().w;
+                w_a.partial_cmp(&w_b).unwrap()
+            });
     }
 
     /// Returns the number of edges.

@@ -6,7 +6,7 @@ pub struct ImageEdge {
     pub n: usize,
     /// Index of second node.
     pub m: usize,
-    /// Edge weight
+    /// Edge weight, i.e. the distance of two pixels in feature space.
     pub w: f32,
 }
 

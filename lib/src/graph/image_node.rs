@@ -14,6 +14,9 @@ pub struct ImageNode {
     pub n: usize,
     /// ID of the node.
     pub id: usize,
-    /// Maximum weight.
+    /// Maximum weight, i.e. the maximum distance in feature space
+    /// of any two connected pixels of this set (see [ImageEdge]).
+    ///
+    /// [ImageEdge]: struct.ImageEdge.html#structfield.w
     pub max_w: f32,
 }

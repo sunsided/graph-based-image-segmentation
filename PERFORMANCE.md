@@ -3,9 +3,9 @@
 On `tree.jpg`:
 
 ```
-Building the graph: 109 ms
-Oversegmentation:   389 ms
-Segment size:       65 ms
+Building the graph: 112 ms
+Oversegmentation:   296 ms
+Segment size:       63 ms
 Label extraction:   37 ms
-Total:              601 ms
+Total:              510 ms
 ```

@@ -33,6 +33,7 @@ fn main() {
     let duration_dl = done - start_dl;
     let duration = done - start_bg;
 
+    println!("Image size:         {} x {} = {} pixels", image.cols(), image.rows(), image.cols() * image.rows());
     println!("Building the graph: {} ms", duration_bg.as_millis());
     println!("Oversegmentation:   {} ms", duration_og.as_millis());
     println!("Segment size:       {} ms", duration_emss.as_millis());
