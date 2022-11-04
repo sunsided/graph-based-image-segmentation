@@ -2,10 +2,13 @@
 name = "cli"
 version = "0.1.0"
 authors = ["Markus Mayer"]
-edition = "2018"
+edition = "2021"
+repository = "https://github.com/sunsided/graph-based-image-segmentation"
+license = "MIT"
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-opencv = "0.46.0"
+opencv = "0.71.0"
 graph-based-image-segmentation = { path = "../lib", version = "*" }

@@ -1,16 +1,20 @@
 [package]
 name = "graph-based-image-segmentation"
+description = "An implementation of graph-based image segmentation algorithms based on superpixels."
 version = "0.1.0"
 authors = ["Markus Mayer"]
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+edition = "2021"
+repository = "https://github.com/sunsided/graph-based-image-segmentation"
+license = "MIT"
+readme = "../README.md"
+keywords = ["graphics", "image-processing"]
+categories = ["computer-vision", "multimedia::images"]
 
 [dependencies]
-opencv = "0.46.0"
+opencv = "0.71.0"
 
 [dev-dependencies]
-criterion = "0.3.3"
+criterion = "0.4.0"
 
 [[bench]]
 name = "performance"

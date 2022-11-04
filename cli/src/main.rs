@@ -42,15 +42,15 @@ fn main() {
     let mut max_loc = Point::default();
     min_max_loc(
         &labels,
-        &mut min,
-        &mut max,
-        &mut min_loc,
-        &mut max_loc,
-        &no_array().unwrap(),
+        Some(&mut min),
+        Some(&mut max),
+        Some(&mut min_loc),
+        Some(&mut max_loc),
+        &no_array(),
     )
     .unwrap();
 
-    let mut labels_out = Mat::default().unwrap();
+    let mut labels_out = Mat::default();
     labels
         .convert_to(&mut labels_out, CV_8UC1, 255f64 / max, 0f64)
         .unwrap();
@@ -61,7 +61,7 @@ fn main() {
 }
 
 fn blur_image(image: &Mat, sigma: f64, size: usize) -> opencv::Result<Mat> {
-    let mut blurred = Mat::default()?;
+    let mut blurred = Mat::default();
     gaussian_blur(
         &image,
         &mut blurred,
@@ -74,11 +74,11 @@ fn blur_image(image: &Mat, sigma: f64, size: usize) -> opencv::Result<Mat> {
 }
 
 fn draw_contours(image: &Mat, labels: &Mat) -> opencv::Result<Mat> {
-    assert_eq!(image.empty()?, false);
-    assert_eq!(image.channels()?, 3);
+    assert_eq!(image.empty(), false);
+    assert_eq!(image.channels(), 3);
     assert_eq!(image.rows(), labels.rows());
     assert_eq!(image.cols(), labels.cols());
-    assert_eq!(labels.typ()?, CV_32SC1);
+    assert_eq!(labels.typ(), CV_32SC1);
 
     let mut contours =
         Mat::new_rows_cols_with_default(image.rows(), image.cols(), CV_8UC3, Scalar::all(0f64))?;

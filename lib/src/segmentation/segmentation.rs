@@ -22,6 +22,7 @@ where
     /// The magic part of graph segmentation.
     magic: M,
     /// The minimum size of the segments, in pixels.
+    #[allow(dead_code)]
     segment_size: usize,
 }
 
@@ -65,7 +66,7 @@ where
     ///
     /// * `image` - The image to oversegment.
     fn build_graph(&mut self, image: &Mat) {
-        assert_eq!(image.empty().unwrap(), false);
+        assert_eq!(image.empty(), false);
         self.height = image.rows() as usize;
         self.width = image.cols() as usize;
         self.graph = self.init_graph_nodes(&image);

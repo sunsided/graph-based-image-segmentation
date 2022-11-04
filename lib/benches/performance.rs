@@ -36,7 +36,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 }
 
 fn blur_image(image: &Mat, sigma: f64, size: usize) -> opencv::Result<Mat> {
-    let mut blurred = Mat::default()?;
+    let mut blurred = Mat::default();
     gaussian_blur(
         &image,
         &mut blurred,
