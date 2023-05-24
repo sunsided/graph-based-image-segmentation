@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use graph_based_image_segmentation::segmentation::{EuclideanRGB, NodeMergingThreshold, Segmentation};
+use graph_based_image_segmentation::{EuclideanRGB, NodeMergingThreshold, Segmentation};
 use opencv::{
     core::{Size, BORDER_DEFAULT},
     imgcodecs::{imdecode, IMREAD_COLOR},
