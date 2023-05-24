@@ -3,8 +3,7 @@ use crate::graph::{ImageEdge, ImageNode};
 /// The magic part of the graph segmentation, i.e. s given two nodes decide
 /// whether to add an edge between them (i.e. merge the corresponding segments).
 /// See the paper by Felzenswalb and Huttenlocher for details.
-// TODO: Rename the trait.
-pub trait Magic {
+pub trait NodeMerging {
     /// Decide whether to merge the two segments corresponding to the given nodes or not.
     ///
     /// # Arguments

@@ -1,3 +1,5 @@
+//! Pixel graph, edges and nodes.
+
 mod image_edge;
 mod image_graph;
 mod image_node;

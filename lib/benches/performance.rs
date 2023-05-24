@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use graph_based_image_segmentation::segmentation::{EuclideanRGB, MagicThreshold, Segmentation};
+use graph_based_image_segmentation::segmentation::{EuclideanRGB, NodeMergingThreshold, Segmentation};
 use opencv::{
     core::{Size, BORDER_DEFAULT},
     imgcodecs::{imdecode, IMREAD_COLOR},
@@ -25,7 +25,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         b.iter(|| {
             let mut segmenter = Segmentation::new(
                 EuclideanRGB::default(),
-                MagicThreshold::new(threshold),
+                NodeMergingThreshold::new(threshold),
                 segment_size,
             );
             segmenter.segment_image(&image);

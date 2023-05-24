@@ -1,5 +1,5 @@
 use crate::graph::{ImageEdge, ImageGraph};
-use crate::segmentation::{Distance, Magic};
+use crate::segmentation::{Distance, NodeMerging};
 use opencv::core::{Scalar, Vec3b, CV_32SC1};
 use opencv::prelude::*;
 
@@ -9,7 +9,7 @@ use opencv::prelude::*;
 pub struct Segmentation<D, M>
 where
     D: Distance,
-    M: Magic,
+    M: NodeMerging,
 {
     /// Image height.
     height: usize,
@@ -29,7 +29,7 @@ where
 impl<D, M> Segmentation<D, M>
 where
     D: Distance,
-    M: Magic,
+    M: NodeMerging,
 {
     pub fn new(distance: D, magic: M, segment_size: usize) -> Self {
         Self {
@@ -66,7 +66,7 @@ where
     ///
     /// * `image` - The image to oversegment.
     fn build_graph(&mut self, image: &Mat) {
-        assert_eq!(image.empty(), false);
+        assert_eq!(image.empty(), false, "image must not be empty");
         self.height = image.rows() as usize;
         self.width = image.cols() as usize;
         self.graph = self.init_graph_nodes(&image);
@@ -149,7 +149,7 @@ where
     /// Oversegment the given graph.
     fn oversegment_graph(&mut self) {
         let graph = &mut self.graph;
-        assert_ne!(graph.num_edges(), 0);
+        assert_ne!(graph.num_edges(), 0, "number of edges must be nonzero");
 
         graph.sort_edges();
 
@@ -188,7 +188,7 @@ where
     /// * `segment_size` - Minimum segment size in pixels.
     fn enforce_minimum_segment_size(&mut self, segment_size: usize) {
         let graph = &mut self.graph;
-        assert_ne!(graph.num_nodes(), 0);
+        assert_ne!(graph.num_nodes(), 0, "number of nodes must be nonzero");
 
         for e in 0..graph.num_edges() {
             let edge = graph.edge_at(e).borrow();

@@ -1,4 +1,4 @@
-use graph_based_image_segmentation::segmentation::{EuclideanRGB, MagicThreshold, Segmentation};
+use graph_based_image_segmentation::segmentation::{EuclideanRGB, NodeMergingThreshold, Segmentation};
 use opencv::core::{
     min_max_loc, no_array, Point, Scalar, Size, Vec3b, Vector, BORDER_DEFAULT, CV_32SC1, CV_8UC1,
     CV_8UC3,
@@ -18,7 +18,7 @@ fn main() {
     let segment_size = 10;
     let mut segmenter = Segmentation::new(
         EuclideanRGB::default(),
-        MagicThreshold::new(threshold),
+        NodeMergingThreshold::new(threshold),
         segment_size,
     );
 

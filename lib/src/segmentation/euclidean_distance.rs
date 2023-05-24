@@ -2,6 +2,16 @@ use crate::graph::ImageNode;
 use crate::segmentation::Distance;
 
 /// Euclidean RGB distance.
+///
+/// ## Example
+/// ```
+/// use graph_based_image_segmentation::graph::ImageNode;
+/// use graph_based_image_segmentation::segmentation::{Distance, EuclideanRGB};
+/// let a = ImageNode { b: 0, g: 0, r: 0, ..Default::default() };
+/// let b = ImageNode { b: 255, g: 255, r: 255, ..Default::default() };
+/// let distance = EuclideanRGB::default();
+/// assert_eq!(distance.distance(&a, &b), 1.0);
+/// ```
 #[derive(Debug, Clone, Copy)]
 pub struct EuclideanRGB {}
 

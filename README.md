@@ -1,7 +1,7 @@
 # Efficient Graph-Based Image Segmentation
 
 This repository contains a Rust implementation of the graph-based image segmentation algorithms
-described in [1] (available [here](http://cs.brown.edu/~pff/segment/)) 
+described in `[1]` (available [here](http://cs.brown.edu/~pff/segment/)) 
 focussing on generating over-segmentations, also referred to as superpixels.
 
 | Contours                 | Labels                 |
@@ -15,7 +15,7 @@ focussing on generating over-segmentations, also referred to as superpixels.
 ```
 
 The implementation is based on [this work](https://github.com/davidstutz/graph-based-image-segmentation) by David Stutz,
-which in turn was used in \[2] for evaluation.
+which in turn was used in `[2]` for evaluation.
 
 ```
 [2] D. Stutz, A. Hermans, B. Leibe.
