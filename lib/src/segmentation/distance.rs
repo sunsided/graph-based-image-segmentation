@@ -1,4 +1,4 @@
-use crate::graph::ImageNode;
+use crate::graph::ImageNodeColor;
 
 /// Trait to be implemented by a concrete distance. The distance defines
 /// how the weights between nodes in the image graph are computed. See the paper
@@ -14,5 +14,5 @@ pub trait Distance {
     /// # Returns
     ///
     /// The distance between the two nodes.
-    fn distance(&self, n: &ImageNode, m: &ImageNode) -> f32;
+    fn distance(&self, n: &ImageNodeColor, m: &ImageNodeColor) -> f32;
 }

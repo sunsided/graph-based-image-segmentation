@@ -2,12 +2,6 @@
 /// color which is needed to compute the weights between pixels.
 #[derive(Debug, Clone, Default)]
 pub struct ImageNode {
-    /// Blue channel.
-    pub b: u8,
-    /// Green channel.
-    pub g: u8,
-    /// Red channel.
-    pub r: u8,
     /// The label of the pixel (i.e. the index of the node this node belongs to).
     pub label: usize,
     /// Size of node after merging with other nodes.
@@ -19,4 +13,23 @@ pub struct ImageNode {
     ///
     /// [ImageEdge]: struct.ImageEdge.html#structfield.w
     pub max_w: f32,
+}
+
+/// Represents a pixel in a video. Each pixel is represented by its
+/// color which is needed to compute the weights between pixels.
+#[derive(Debug, Copy, Clone, Default)]
+pub struct ImageNodeColor {
+    /// Blue channel.
+    pub b: u8,
+    /// Green channel.
+    pub g: u8,
+    /// Red channel.
+    pub r: u8,
+}
+
+impl ImageNodeColor {
+    #[inline(always)]
+    pub const fn new_bgr(b: u8, g: u8, r: u8) -> Self {
+        Self { b, g, r }
+    }
 }

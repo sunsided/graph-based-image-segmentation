@@ -1,4 +1,4 @@
-use crate::graph::{ImageEdge, ImageGraph};
+use crate::graph::{ImageEdge, ImageGraph, ImageNodeColor};
 use crate::segmentation::{Distance, NodeMerging};
 use opencv::core::{Scalar, Vec3b, CV_32SC1};
 use opencv::prelude::*;
@@ -90,11 +90,14 @@ where
             for j in 0..width {
                 let node_index = width * i + j;
                 let mut node = graph.node_at(node_index).borrow_mut();
+                let mut node_color = graph.node_color_at(node_index);
 
                 let bgr = image.at_2d::<Vec3b>(i as i32, j as i32).unwrap().0;
-                node.b = bgr[0];
-                node.g = bgr[1];
-                node.r = bgr[2];
+                node_color.set(ImageNodeColor {
+                    b: bgr[0],
+                    g: bgr[1],
+                    r: bgr[2],
+                });
 
                 // Initialize label
                 node.label = node_index;
@@ -117,32 +120,24 @@ where
 
         let mut edges = Vec::new();
 
-        for i in 0..height {
-            for j in 0..width {
+        for i in 0..(height - 1) {
+            for j in 0..(width - 1) {
                 let node_index = width * i + j;
-                let node = graph.node_at(node_index);
+                let node = graph.node_color_at(node_index).get();
 
                 // Test right neighbor.
-                if j < width - 1 {
-                    let other_index = width * i + (j + 1);
-                    let other = graph.node_at(other_index);
-
-                    let weight = distance.distance(&node.borrow(), &other.borrow());
-                    let edge = ImageEdge::new(node_index, other_index, weight);
-
-                    edges.push(edge);
-                }
+                let other_index = width * i + (j + 1);
+                let other = graph.node_color_at(other_index).get();
+                let weight = distance.distance(&node, &other);
+                let edge = ImageEdge::new(node_index, other_index, weight);
+                edges.push(edge);
 
                 // Test bottom neighbor.
-                if i < height - 1 {
-                    let other_index = width * (i + 1) + j;
-                    let other = graph.node_at(other_index);
-
-                    let weight = distance.distance(&node.borrow(), &other.borrow());
-                    let edge = ImageEdge::new(node_index, other_index, weight);
-
-                    edges.push(edge);
-                }
+                let other_index = width * (i + 1) + j;
+                let other = graph.node_color_at(other_index).get();
+                let weight = distance.distance(&node, &other);
+                let edge = ImageEdge::new(node_index, other_index, weight);
+                edges.push(edge);
             }
         }
 

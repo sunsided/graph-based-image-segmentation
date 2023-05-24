@@ -1,4 +1,4 @@
-use crate::graph::{ImageEdge, ImageNode};
+use crate::graph::{ImageEdge, ImageNode, ImageNodeColor};
 use std::cell::{Cell, RefCell};
 
 /// Represents an image graph, consisting of one node per pixel which are 4-connected.
@@ -15,6 +15,7 @@ pub struct ImageGraph {
 #[derive(Debug, Clone, Default)]
 pub struct Nodes {
     nodes: Vec<RefCell<ImageNode>>,
+    node_colors: Vec<Cell<ImageNodeColor>>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -113,6 +114,19 @@ impl ImageGraph {
         self.nodes.at(n)
     }
 
+    /// Get a reference to the n-th node.
+    ///
+    /// # Arguments
+    ///
+    /// * `n` - The index of the node.
+    ///
+    /// # Return
+    ///
+    /// The node at index `n`.
+    pub fn node_color_at(&self, n: usize) -> &Cell<ImageNodeColor> {
+        self.nodes.color_at(n)
+    }
+
     /// Get the ID of the n-th node.
     ///
     /// # Arguments
@@ -161,8 +175,8 @@ impl ImageGraph {
     ///
     /// * `edges` - The edges to add.
     pub fn add_edges<I>(&mut self, edges: I)
-        where
-            I: Iterator<Item = ImageEdge>,
+    where
+        I: Iterator<Item = ImageEdge>,
     {
         self.edges.add_many(edges)
     }
@@ -180,11 +194,16 @@ impl ImageGraph {
 
 impl Nodes {
     pub fn allocated(n: usize) -> Self {
-        let mut nodes = Vec::new();
+        let mut nodes = Vec::with_capacity(n);
+        let mut colors = Vec::with_capacity(n);
         for _ in 0..n {
             nodes.push(RefCell::new(ImageNode::default()));
+            colors.push(Cell::new(ImageNodeColor::default()));
         }
-        Self { nodes }
+        Self {
+            nodes,
+            node_colors: colors,
+        }
     }
 
     /// Set the node of the given index.
@@ -221,6 +240,20 @@ impl Nodes {
     pub fn at(&self, n: usize) -> &RefCell<ImageNode> {
         assert!(n < self.nodes.len());
         &self.nodes[n]
+    }
+
+    /// Get a reference to the n-th node color.
+    ///
+    /// # Arguments
+    ///
+    /// * `n` - The index of the node color.
+    ///
+    /// # Return
+    ///
+    /// The node at index `n`.
+    pub fn color_at(&self, n: usize) -> &Cell<ImageNodeColor> {
+        assert!(n < self.node_colors.len());
+        &self.node_colors[n]
     }
 
     /// When two nodes get merged, the first node is assigned the id of the second
@@ -309,18 +342,17 @@ impl Edges {
 
     /// Sorts the edges by weight.
     pub fn sort_by_weight(&mut self) {
-        self.edges
-            .sort_by(|a, b| {
-                let a = a.borrow();
-                let b = b.borrow();
+        self.edges.sort_by(|a, b| {
+            let a = a.borrow();
+            let b = b.borrow();
 
-                // Main sorting is by edge weight ascending.
-                // In order to improve cache coherency during processing, we then sort by index.
-                let ord_w = a.w.partial_cmp(&b.w).unwrap();
-                let ord_n = a.n.partial_cmp(&b.n).unwrap();
-                let ord_m = a.m.partial_cmp(&b.m).unwrap();
-                ord_w.then(ord_n).then(ord_m)
-            });
+            // Main sorting is by edge weight ascending.
+            // In order to improve cache coherency during processing, we then sort by index.
+            let ord_w = a.w.partial_cmp(&b.w).unwrap();
+            let ord_n = a.n.partial_cmp(&b.n).unwrap();
+            let ord_m = a.m.partial_cmp(&b.m).unwrap();
+            ord_w.then(ord_n).then(ord_m)
+        });
     }
 
     /// Removes all edges.
