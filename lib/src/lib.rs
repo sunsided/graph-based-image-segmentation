@@ -8,6 +8,8 @@
 //! |--------------------------|------------------------|
 //! | ![](https://github.com/sunsided/graph-based-image-segmentation/raw/842c931f9e301913a9101827ca880d1f03f27572/images/contours.jpg) | ![](https://github.com/sunsided/graph-based-image-segmentation/raw/842c931f9e301913a9101827ca880d1f03f27572/images/labels.jpg) |
 //!
+//! Please note that this is a reference implementation and not particularly fast.
+//!
 //! ```plain
 //! [1] P. F. Felzenswalb and D. P. Huttenlocher.
 //!     Efficient Graph-Based Image Segmentation.
