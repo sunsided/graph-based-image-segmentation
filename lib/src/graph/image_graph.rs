@@ -123,6 +123,7 @@ impl ImageGraph {
     /// # Return
     ///
     /// The node at index `n`.
+    #[inline(always)]
     pub fn node_color_at(&self, n: usize) -> &Cell<ImageNodeColor> {
         self.nodes.color_at(n)
     }
@@ -251,6 +252,7 @@ impl Nodes {
     /// # Return
     ///
     /// The node at index `n`.
+    #[inline(always)]
     pub fn color_at(&self, n: usize) -> &Cell<ImageNodeColor> {
         assert!(n < self.node_colors.len());
         &self.node_colors[n]

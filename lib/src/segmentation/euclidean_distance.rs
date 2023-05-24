@@ -26,6 +26,7 @@ impl Default for EuclideanRGB {
 }
 
 impl Distance for EuclideanRGB {
+    #[inline(always)]
     fn distance(&self, n: &ImageNodeColor, m: &ImageNodeColor) -> f32 {
         let dr = n.r as f32 - m.r as f32;
         let dg = n.g as f32 - m.g as f32;
