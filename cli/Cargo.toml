@@ -11,3 +11,6 @@ publish = false
 [dependencies]
 opencv = "0.82.0"
 graph-based-image-segmentation = { path = "../lib", version = "*" }
+
+[profile.dev.package.opencv]
+opt-level = 3

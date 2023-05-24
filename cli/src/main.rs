@@ -54,7 +54,11 @@ fn main() {
     labels
         .convert_to(&mut labels_out, CV_8UC1, 255f64 / max, 0f64)
         .unwrap();
-    imwrite("labels.jpg", &labels_out, &Vector::default()).unwrap();
+
+    let mut labels_colored = Mat::default();
+    opencv::imgproc::apply_color_map(&labels_out, &mut labels_colored, opencv::imgproc::COLORMAP_TURBO).unwrap();
+
+    imwrite("labels.jpg", &labels_colored, &Vector::default()).unwrap();
 
     let contours = draw_contours(&image, &labels).unwrap();
     imwrite("contours.jpg", &contours, &Vector::default()).unwrap();

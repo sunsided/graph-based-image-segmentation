@@ -1,8 +1,12 @@
 # Efficient Graph-Based Image Segmentation
 
 This repository contains a Rust implementation of the graph-based image segmentation algorithms
-described in \[1] (available [here](http://cs.brown.edu/~pff/segment/)) 
-focussing on generating oversegmentations, also referred to as superpixels.
+described in [1] (available [here](http://cs.brown.edu/~pff/segment/)) 
+focussing on generating over-segmentations, also referred to as superpixels.
+
+| Contours                 | Labels                 |
+|--------------------------|------------------------|
+| ![](images/contours.jpg) | ![](images/labels.jpg) |
 
 ```
 [1] P. F. Felzenswalb and D. P. Huttenlocher.
