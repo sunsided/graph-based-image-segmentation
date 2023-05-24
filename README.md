@@ -8,6 +8,8 @@ focussing on generating over-segmentations, also referred to as superpixels.
 |--------------------------|------------------------|
 | ![](images/contours.jpg) | ![](images/labels.jpg) |
 
+Please note that this is a reference implementation and not particularly fast.
+
 ```
 [1] P. F. Felzenswalb and D. P. Huttenlocher.
     Efficient Graph-Based Image Segmentation.

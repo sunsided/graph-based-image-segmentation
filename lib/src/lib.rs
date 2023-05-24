@@ -27,7 +27,7 @@
 //!
 //! ```no_run
 //! use opencv::imgcodecs::{imread, IMREAD_COLOR};
-//! use graph_based_image_segmentation::segmentation::{Segmentation, EuclideanRGB, NodeMergingThreshold};
+//! use graph_based_image_segmentation::{Segmentation, EuclideanRGB, NodeMergingThreshold};
 //!
 //! fn main() {
 //!     let mut image = imread("data/tree.jpg", IMREAD_COLOR).unwrap();
@@ -44,5 +44,9 @@
 //!     let labels = segmenter.segment_image(&image);
 //! }
 //! ```
-pub mod graph;
-pub mod segmentation;
+mod graph;
+mod segmentation;
+
+pub use segmentation::{
+    Distance, EuclideanRGB, ManhattanRGB, NodeMerging, NodeMergingThreshold, Segmentation,
+};

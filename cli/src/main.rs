@@ -1,4 +1,4 @@
-use graph_based_image_segmentation::segmentation::{EuclideanRGB, NodeMergingThreshold, Segmentation};
+use graph_based_image_segmentation::{EuclideanRGB, NodeMergingThreshold, Segmentation};
 use opencv::core::{
     min_max_loc, no_array, Point, Scalar, Size, Vec3b, Vector, BORDER_DEFAULT, CV_32SC1, CV_8UC1,
     CV_8UC3,
@@ -23,18 +23,19 @@ fn main() {
     );
 
     let start = Instant::now();
-    let labels = segmenter.segment_image(&image);
+    let (labels, num_segments) = segmenter.segment_image(&image);
     let done = Instant::now();
 
     let duration = done - start;
 
     println!(
-        "Image size:         {} x {} = {} pixels",
+        "Image size:         {} × {} = {} pixels",
         image.cols(),
         image.rows(),
         image.cols() * image.rows()
     );
-    println!("Duration:      {} ms", duration.as_millis());
+    println!("Num. segments:      {}", num_segments);
+    println!("Duration:           {} ms", duration.as_millis());
 
     let mut min = 0f64;
     let mut max = 0f64;
@@ -56,7 +57,12 @@ fn main() {
         .unwrap();
 
     let mut labels_colored = Mat::default();
-    opencv::imgproc::apply_color_map(&labels_out, &mut labels_colored, opencv::imgproc::COLORMAP_TURBO).unwrap();
+    opencv::imgproc::apply_color_map(
+        &labels_out,
+        &mut labels_colored,
+        opencv::imgproc::COLORMAP_TURBO,
+    )
+    .unwrap();
 
     imwrite("labels.jpg", &labels_colored, &Vector::default()).unwrap();
 

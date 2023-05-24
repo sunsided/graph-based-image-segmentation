@@ -51,12 +51,16 @@ where
     ///
     /// # Returns
     ///
-    /// A matrix in `CV_32SC1` format containing the labels for each pixel.
-    pub fn segment_image(&mut self, image: &Mat) -> Mat {
+    /// A tuple consisting of
+    /// - The matrix in `CV_32SC1` format containing the labels for each pixel.
+    /// - The number of segments / components.
+    pub fn segment_image(&mut self, image: &Mat) -> (Mat, usize) {
         self.build_graph(&image);
         self.oversegment_graph();
         self.enforce_minimum_segment_size(10);
-        self.derive_labels()
+        let segmentation = self.derive_labels();
+        let num_nodes = self.graph.num_components();
+        (segmentation, num_nodes)
     }
 
     /// Build the graph based on the image, i.e. compute the weights
