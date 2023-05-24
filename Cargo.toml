@@ -1,2 +1,6 @@
 [workspace]
+default-members = ["lib", "cli"]
 members = ["lib", "cli"]
+
+[profile.dev.package.opencv]
+opt-level = 3

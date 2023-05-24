@@ -11,7 +11,7 @@ keywords = ["graphics", "image-processing"]
 categories = ["computer-vision", "multimedia::images"]
 
 [dependencies]
-opencv = "0.82.0"
+opencv = { version = "0.82.0", default-features = false, features = ["imgcodecs"] }
 
 [dev-dependencies]
 criterion = "0.5.0"
