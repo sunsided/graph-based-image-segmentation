@@ -15,6 +15,7 @@ opencv = { version = "0.82.0", default-features = false, features = ["imgcodecs"
 
 [dev-dependencies]
 criterion = "0.5.0"
+opencv = { version = "0.82.0", default-features = false, features = ["imgproc"] }
 
 [[bench]]
 name = "performance"
