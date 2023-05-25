@@ -1,7 +1,7 @@
 [package]
 name = "graph-based-image-segmentation"
 description = "An implementation of graph-based image segmentation algorithms based on superpixels."
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Markus Mayer"]
 edition = "2021"
 repository = "https://github.com/sunsided/graph-based-image-segmentation"
