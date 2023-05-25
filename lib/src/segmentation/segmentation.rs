@@ -1,4 +1,4 @@
-use crate::graph::{ImageEdge, ImageGraph, ImageNodeColor};
+use crate::graph::{ImageEdge, ImageGraph, ImageNode, ImageNodeColor};
 use crate::segmentation::{Distance, NodeMerging};
 use opencv::core::{Scalar, Vec3b, CV_32SC1};
 use opencv::prelude::*;
@@ -89,8 +89,8 @@ where
         for i in 0..height {
             for j in 0..width {
                 let node_index = width * i + j;
-                let mut node = graph.node_at(node_index).borrow_mut();
-                let mut node_color = graph.node_color_at(node_index);
+                let node = graph.node_at(node_index);
+                let node_color = graph.node_color_at(node_index);
 
                 let bgr = image.at_2d::<Vec3b>(i as i32, j as i32).unwrap().0;
                 node_color.set(ImageNodeColor {
@@ -100,9 +100,12 @@ where
                 });
 
                 // Initialize label
-                node.label = node_index;
-                node.id = node_index;
-                node.n = 1;
+                node.set(ImageNode {
+                    label: node_index,
+                    id: node_index,
+                    n: 1,
+                    ..Default::default()
+                });
             }
         }
 
@@ -154,12 +157,7 @@ where
 
         for e in 0..graph.num_edges() {
             debug_assert_eq!(e % graph.num_edges(), e);
-            let edge_cell = graph.edge_at(e);
-
-            // SAFETY: The edge is only borrow immutably here, and none of the
-            //         node lookup methods on the graph operate on edges.
-            //         Since each edge is only processed once, we can safely borrow "unsafely".
-            let edge = unsafe { edge_cell.try_borrow_unguarded().unwrap() };
+            let edge = graph.edge_at(e).get();
 
             let s_n_idx = graph.find_node_component_at(edge.n);
             let s_m_idx = graph.find_node_component_at(edge.m);
@@ -168,11 +166,10 @@ where
                 continue;
             }
 
-            let mut s_n = graph.node_at(s_n_idx).borrow_mut();
-            let mut s_m = graph.node_at(s_m_idx).borrow_mut();
+            let mut s_n = graph.node_at(s_n_idx);
+            let mut s_m = graph.node_at(s_m_idx);
 
             // Are the nodes in different components?
-            debug_assert_ne!(s_m.id, s_n.id);
             let should_merge = self.magic.should_merge(&s_n, &s_m, &edge);
             if should_merge {
                 graph.merge(&mut s_n, &mut s_m, &edge);
@@ -190,7 +187,7 @@ where
         assert_ne!(graph.num_nodes(), 0, "number of nodes must be nonzero");
 
         for e in 0..graph.num_edges() {
-            let edge = graph.edge_at(e).borrow();
+            let edge = graph.edge_at(e).get();
 
             let s_n_idx = graph.find_node_component_at(edge.n);
             let s_m_idx = graph.find_node_component_at(edge.m);
@@ -199,13 +196,16 @@ where
                 continue;
             }
 
-            let mut s_n = graph.node_at(s_n_idx).borrow_mut();
-            let mut s_m = graph.node_at(s_m_idx).borrow_mut();
+            let mut s_n = graph.node_at(s_n_idx);
+            let mut s_m = graph.node_at(s_m_idx);
+
+            let lhs = s_n.get();
+            let rhs = s_m.get();
 
             // Neighboring segments must have different labels.
-            debug_assert_ne!(s_m.label, s_n.label);
+            debug_assert_ne!(lhs.label, rhs.label);
 
-            let segment_too_small = s_n.n < segment_size || s_m.n < segment_size;
+            let segment_too_small = lhs.n < segment_size || rhs.n < segment_size;
             if segment_too_small {
                 graph.merge(&mut s_n, &mut s_m, &edge);
             }

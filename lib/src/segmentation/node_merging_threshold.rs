@@ -1,5 +1,6 @@
 use crate::graph::{ImageEdge, ImageNode};
 use crate::segmentation::NodeMerging;
+use std::cell::Cell;
 
 /// The original criterion described in
 ///
@@ -22,7 +23,11 @@ impl NodeMergingThreshold {
 }
 
 impl NodeMerging for NodeMergingThreshold {
-    fn should_merge(&self, s_n: &ImageNode, s_m: &ImageNode, e: &ImageEdge) -> bool {
+    fn should_merge(&self, s_n: &Cell<ImageNode>, s_m: &Cell<ImageNode>, e: &ImageEdge) -> bool {
+        let s_n = s_n.get();
+        let s_m = s_m.get();
+        debug_assert_ne!(s_m.id, s_n.id);
+
         let threshold_n = s_n.max_w + self.c / s_n.n as f32;
         let threshold_m = s_m.max_w + self.c / s_m.n as f32;
 

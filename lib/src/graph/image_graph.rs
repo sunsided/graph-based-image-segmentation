@@ -1,5 +1,5 @@
 use crate::graph::{ImageEdge, ImageNode, ImageNodeColor};
-use std::cell::{Cell, RefCell};
+use std::cell::Cell;
 
 /// Represents an image graph, consisting of one node per pixel which are 4-connected.
 #[derive(Debug, Clone, Default)]
@@ -14,13 +14,13 @@ pub struct ImageGraph {
 
 #[derive(Debug, Clone, Default)]
 pub struct Nodes {
-    nodes: Vec<RefCell<ImageNode>>,
+    nodes: Vec<Cell<ImageNode>>,
     node_colors: Vec<Cell<ImageNodeColor>>,
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct Edges {
-    edges: Vec<RefCell<ImageEdge>>,
+    edges: Vec<Cell<ImageEdge>>,
 }
 
 impl ImageGraph {
@@ -87,14 +87,22 @@ impl ImageGraph {
     ///
     /// Depending on the used "Distance", some lines may be commented out
     /// to speed up the algorithm.
-    pub fn merge(&self, s_n: &mut ImageNode, s_m: &mut ImageNode, e: &ImageEdge) {
-        s_m.label = s_n.id;
+    pub fn merge(&self, s_n: &Cell<ImageNode>, s_m: &Cell<ImageNode>, e: &ImageEdge) {
+        let mut lhs = s_n.get();
+        let mut rhs = s_m.get();
+        debug_assert_ne!(lhs.id, rhs.id);
+
+        rhs.label = lhs.id;
 
         // Update count.
-        s_n.n += s_m.n;
+        lhs.n += rhs.n;
 
         // Update maximum weight.
-        s_n.max_w = s_n.max_w.max(s_m.max_w).max(e.w);
+        lhs.max_w = lhs.max_w.max(rhs.max_w).max(e.w);
+
+        // Update the nodes.
+        s_n.set(lhs);
+        s_m.set(rhs);
 
         // Update component count.
         let new_k = self.k.get() - 1;
@@ -110,7 +118,7 @@ impl ImageGraph {
     /// # Return
     ///
     /// The node at index `n`.
-    pub fn node_at(&self, n: usize) -> &RefCell<ImageNode> {
+    pub fn node_at(&self, n: usize) -> &Cell<ImageNode> {
         self.nodes.at(n)
     }
 
@@ -137,8 +145,11 @@ impl ImageGraph {
     /// # Return
     ///
     /// The ID of the node at index `n`.
+    #[inline(always)]
     pub fn node_id_at(&self, n: usize) -> usize {
-        self.nodes.at(n).borrow().id
+        let id = self.nodes.at(n).get().id;
+        debug_assert_eq!(id, n); // TODO: Remove this method call.
+        id
     }
 
     /// Gets a reference to the n-th edge.
@@ -150,7 +161,7 @@ impl ImageGraph {
     /// # Return
     ///
     /// The edge at index `n`.
-    pub fn edge_at(&self, n: usize) -> &RefCell<ImageEdge> {
+    pub fn edge_at(&self, n: usize) -> &Cell<ImageEdge> {
         self.edges.at(n)
     }
 
@@ -195,12 +206,12 @@ impl ImageGraph {
 
 impl Nodes {
     pub fn allocated(n: usize) -> Self {
-        let mut nodes = Vec::with_capacity(n);
-        let mut colors = Vec::with_capacity(n);
-        for _ in 0..n {
-            nodes.push(RefCell::new(ImageNode::default()));
+        let mut nodes = vec![Default::default(); n];
+        let mut colors = vec![Default::default(); n];
+        /*for _ in 0..n {
+            nodes.push(Cell::new(ImageNode::default()));
             colors.push(Cell::new(ImageNodeColor::default()));
-        }
+        }*/
         Self {
             nodes,
             node_colors: colors,
@@ -226,7 +237,7 @@ impl Nodes {
     /// * `node` - The node to add.
     #[allow(dead_code)]
     pub fn add(&mut self, node: ImageNode) {
-        self.nodes.push(RefCell::new(node))
+        self.nodes.push(Cell::new(node))
     }
 
     /// Get a reference to the n-th node.
@@ -238,7 +249,7 @@ impl Nodes {
     /// # Return
     ///
     /// The node at index `n`.
-    pub fn at(&self, n: usize) -> &RefCell<ImageNode> {
+    pub fn at(&self, n: usize) -> &Cell<ImageNode> {
         assert!(n < self.nodes.len());
         &self.nodes[n]
     }
@@ -271,7 +282,7 @@ impl Nodes {
     ///
     /// The node representing the found component.
     pub fn find_component_at(&self, index: usize) -> usize {
-        let mut n = self.nodes[index].borrow_mut();
+        let mut n = self.nodes[index].get();
         debug_assert_eq!(n.id, index);
         if n.label == n.id {
             return index;
@@ -282,7 +293,7 @@ impl Nodes {
         let mut id = n.id;
 
         while l != id {
-            let token = self.nodes[l].borrow();
+            let token = self.nodes[l].get();
             l = token.label;
             id = token.id;
         }
@@ -290,11 +301,12 @@ impl Nodes {
         // If the found component is identical to the originally provided index, we must not borrow again.
         debug_assert_ne!(l, index);
 
-        let s = self.nodes[l].borrow_mut();
+        let s = self.nodes[l].get();
         debug_assert_eq!(s.label, s.id);
 
         // Save latest component.
         n.label = s.id;
+        self.nodes[index].set(n);
         l
     }
 
@@ -311,7 +323,7 @@ impl Edges {
     ///
     /// * `edge` - The edge to add.
     pub fn add(&mut self, edge: ImageEdge) {
-        self.edges.push(RefCell::new(edge))
+        self.edges.push(Cell::new(edge))
     }
 
     /// Add new edges.
@@ -337,7 +349,7 @@ impl Edges {
     /// # Return
     ///
     /// The edge at index `n`.
-    pub fn at(&self, n: usize) -> &RefCell<ImageEdge> {
+    pub fn at(&self, n: usize) -> &Cell<ImageEdge> {
         assert!(n < self.edges.len());
         &self.edges[n]
     }
@@ -345,8 +357,8 @@ impl Edges {
     /// Sorts the edges by weight.
     pub fn sort_by_weight(&mut self) {
         self.edges.sort_by(|a, b| {
-            let a = a.borrow();
-            let b = b.borrow();
+            let a = a.get();
+            let b = b.get();
 
             // Main sorting is by edge weight ascending.
             // In order to improve cache coherency during processing, we then sort by index.

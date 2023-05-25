@@ -1,6 +1,6 @@
 /// Represents an edge between two pixels in an image.
 ///  Each edge is characterized by a weight and the adjacent nodes.
-#[derive(Debug, PartialOrd, PartialEq, Clone, Default)]
+#[derive(Debug, PartialOrd, PartialEq, Copy, Clone, Default)]
 pub struct ImageEdge {
     /// Index of first node.
     pub n: usize,

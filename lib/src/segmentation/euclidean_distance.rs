@@ -1,4 +1,4 @@
-use crate::graph::{ImageNode, ImageNodeColor};
+use crate::graph::ImageNodeColor;
 use crate::segmentation::Distance;
 
 /// Euclidean RGB distance.

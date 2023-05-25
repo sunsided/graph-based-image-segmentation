@@ -1,6 +1,5 @@
-use crate::graph::{ImageNode, ImageNodeColor};
+use crate::graph::ImageNodeColor;
 use crate::segmentation::Distance;
-use std::cell::Cell;
 
 /// Manhattan (i.e. L1) distance.
 ///

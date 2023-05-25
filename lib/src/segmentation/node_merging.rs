@@ -1,4 +1,5 @@
 use crate::graph::{ImageEdge, ImageNode};
+use std::cell::Cell;
 
 /// The magic part of the graph segmentation, i.e. s given two nodes decide
 /// whether to add an edge between them (i.e. merge the corresponding segments).
@@ -17,5 +18,5 @@ pub trait NodeMerging {
     /// `true` if merge
     // TODO: Rename the method.
     // TODO: Update the documentation on the return value.
-    fn should_merge(&self, s_n: &ImageNode, s_m: &ImageNode, e: &ImageEdge) -> bool;
+    fn should_merge(&self, s_n: &Cell<ImageNode>, s_m: &Cell<ImageNode>, e: &ImageEdge) -> bool;
 }
