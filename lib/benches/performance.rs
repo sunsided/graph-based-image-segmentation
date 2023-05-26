@@ -19,7 +19,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     image = blur_image(&mut image, sigma, kernel_size).unwrap();
 
     let mut group = c.benchmark_group("segmentation");
-    group.measurement_time(Duration::from_secs(15));
+    group.measurement_time(Duration::from_secs(30));
 
     group.bench_function("segment_image 0.8 10", |b| {
         b.iter(|| {
