@@ -94,6 +94,7 @@ impl ImageGraph {
         debug_assert_ne!(lhs.id, rhs.id);
 
         rhs.label = lhs.id;
+        debug_assert_eq!(lhs.label, lhs.id);
 
         // Update count.
         lhs.n += rhs.n;
