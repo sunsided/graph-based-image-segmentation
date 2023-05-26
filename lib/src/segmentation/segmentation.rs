@@ -22,7 +22,6 @@ where
     /// The magic part of graph segmentation.
     magic: M,
     /// The minimum size of the segments, in pixels.
-    #[allow(dead_code)]
     segment_size: usize,
 }
 
@@ -57,7 +56,7 @@ where
     pub fn segment_image(&mut self, image: &Mat) -> (Mat, usize) {
         self.build_graph(&image);
         self.oversegment_graph();
-        self.enforce_minimum_segment_size(10);
+        self.enforce_minimum_segment_size(self.segment_size);
         let segmentation = self.derive_labels();
         let num_nodes = self.graph.num_components();
         (segmentation, num_nodes)
