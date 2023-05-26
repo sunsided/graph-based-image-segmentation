@@ -179,6 +179,7 @@ impl ImageGraph {
     /// # Returns
     ///
     /// The node representing the found component.
+    #[inline(always)]
     pub fn find_node_component_at(&self, index: usize) -> usize {
         self.nodes.find_component_at(index)
     }
@@ -188,9 +189,10 @@ impl ImageGraph {
     /// # Arguments
     ///
     /// * `edges` - The edges to add.
+    #[inline(always)]
     pub fn add_edges<I>(&mut self, edges: I)
     where
-        I: Iterator<Item = ImageEdge>,
+        I: IntoIterator<Item = ImageEdge>,
     {
         self.edges.add_many(edges)
     }
@@ -216,28 +218,6 @@ impl Nodes {
         }
     }
 
-    /// Set the node of the given index.
-    ///
-    /// # Arguments
-    ///
-    /// * `n` - The index of the node.
-    /// * `node` - The node to set.
-    #[allow(dead_code)]
-    pub fn set(&mut self, n: usize, node: ImageNode) {
-        assert!(n < self.nodes.len());
-        self.nodes[n].replace(node);
-    }
-
-    /// Add a new node.
-    ///
-    /// # Arguments
-    ///
-    /// * `node` - The node to add.
-    #[allow(dead_code)]
-    pub fn add(&mut self, node: ImageNode) {
-        self.nodes.push(Cell::new(node))
-    }
-
     /// Get a reference to the n-th node.
     ///
     /// # Arguments
@@ -248,7 +228,7 @@ impl Nodes {
     ///
     /// The node at index `n`.
     pub fn at(&self, n: usize) -> &Cell<ImageNode> {
-        assert!(n < self.nodes.len());
+        debug_assert!(n < self.nodes.len());
         &self.nodes[n]
     }
 
@@ -263,7 +243,7 @@ impl Nodes {
     /// The node at index `n`.
     #[inline(always)]
     pub fn color_at(&self, n: usize) -> &Cell<ImageNodeColor> {
-        assert!(n < self.node_colors.len());
+        debug_assert!(n < self.node_colors.len());
         &self.node_colors[n]
     }
 
@@ -280,7 +260,7 @@ impl Nodes {
     ///
     /// The node representing the found component.
     pub fn find_component_at(&self, index: usize) -> usize {
-        let mut n = self.nodes[index].get();
+        let n = unsafe { &mut *self.nodes[index].as_ptr() };
         debug_assert_eq!(n.id, index);
         if n.label == n.id {
             return index;
@@ -291,7 +271,7 @@ impl Nodes {
         let mut id = n.id;
 
         while l != id {
-            let token = self.nodes[l].get();
+            let token = unsafe { &*self.nodes[l].as_ptr() };
             l = token.label;
             id = token.id;
         }
@@ -299,12 +279,11 @@ impl Nodes {
         // If the found component is identical to the originally provided index, we must not borrow again.
         debug_assert_ne!(l, index);
 
-        let s = self.nodes[l].get();
+        let s = unsafe { &*self.nodes[l].as_ptr() };
         debug_assert_eq!(s.label, s.id);
 
         // Save latest component.
         n.label = s.id;
-        self.nodes[index].set(n);
         l
     }
 
@@ -315,27 +294,17 @@ impl Nodes {
 }
 
 impl Edges {
-    /// Add a new edge.
-    ///
-    /// # Arguments
-    ///
-    /// * `edge` - The edge to add.
-    pub fn add(&mut self, edge: ImageEdge) {
-        self.edges.push(Cell::new(edge))
-    }
-
     /// Add new edges.
     ///
     /// # Arguments
     ///
     /// * `edges` - The edges to add.
+    #[inline(always)]
     pub fn add_many<I>(&mut self, edges: I)
     where
-        I: Iterator<Item = ImageEdge>,
+        I: IntoIterator<Item = ImageEdge>,
     {
-        for edge in edges.into_iter() {
-            self.add(edge);
-        }
+        self.edges.extend(edges.into_iter().map(Cell::new))
     }
 
     /// Gets a reference to the n-th edge.
@@ -348,7 +317,7 @@ impl Edges {
     ///
     /// The edge at index `n`.
     pub fn at(&self, n: usize) -> &Cell<ImageEdge> {
-        assert!(n < self.edges.len());
+        debug_assert!(n < self.edges.len());
         &self.edges[n]
     }
 

@@ -89,12 +89,13 @@ where
         let graph = ImageGraph::new_with_nodes(node_count);
 
         for i in 0..height {
+            let row = image.row((i) as _).unwrap();
             for j in 0..width {
                 let node_index = width * i + j;
                 let node = graph.node_at(node_index);
                 let node_color = graph.node_color_at(node_index);
 
-                let bgr = image.at_2d::<Vec3b>(i as i32, j as i32).unwrap().0;
+                let bgr = row.at::<Vec3b>(j as _).unwrap();
                 node_color.set(ImageNodeColor {
                     b: bgr[0],
                     g: bgr[1],
@@ -229,13 +230,14 @@ where
         .unwrap();
 
         for i in 0..self.height {
+            let mut row = labels.row(i as _).unwrap();
             for j in 0..self.width {
                 let n = self.width * i + j;
 
                 let index = self.graph.find_node_component_at(n);
                 let id = self.graph.node_id_at(index) as i32;
 
-                *(labels.at_2d_mut(i as i32, j as i32).unwrap()) = id;
+                *(row.at_mut(j as _).unwrap()) = id;
             }
         }
 

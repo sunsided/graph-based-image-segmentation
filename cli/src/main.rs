@@ -96,11 +96,13 @@ fn draw_contours(image: &Mat, labels: &Mat) -> opencv::Result<Mat> {
     let color = Vec3b::all(0); // black contours
 
     for i in 0..contours.rows() {
+        let mut c_row = contours.row(i)?;
+        let i_row = image.row(i)?;
         for j in 0..contours.cols() {
             if is_4connected_boundary_pixel(&labels, i, j)? {
-                *contours.at_2d_mut::<Vec3b>(i, j)? = color;
+                *(c_row.at_mut::<Vec3b>(j)?) = color;
             } else {
-                *contours.at_2d_mut::<Vec3b>(i, j)? = *image.at_2d::<Vec3b>(i, j)?;
+                *(c_row.at_mut::<Vec3b>(j)?) = *i_row.at::<Vec3b>(j)?;
             }
         }
     }
@@ -110,7 +112,8 @@ fn draw_contours(image: &Mat, labels: &Mat) -> opencv::Result<Mat> {
 
 /// Check if the given pixel is a boundary pixel in the given segmentation.
 fn is_4connected_boundary_pixel(labels: &Mat, row: i32, col: i32) -> opencv::Result<bool> {
-    let pixel = labels.at_2d::<i32>(row, col)?;
+    let pixel_row = labels.row(row)?;
+    let pixel = pixel_row.at::<i32>(col)?;
 
     let not_left = row > 0;
     let not_right = row < labels.rows() - 1;
@@ -125,11 +128,11 @@ fn is_4connected_boundary_pixel(labels: &Mat, row: i32, col: i32) -> opencv::Res
         return Ok(true);
     }
 
-    if not_top && pixel != labels.at_2d::<i32>(row, col - 1)? {
+    if not_top && pixel != pixel_row.at::<i32>(col - 1)? {
         return Ok(true);
     }
 
-    if not_bottom && pixel != labels.at_2d::<i32>(row, col + 1)? {
+    if not_bottom && pixel != pixel_row.at::<i32>(col + 1)? {
         return Ok(true);
     }
 
