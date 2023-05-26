@@ -10,6 +10,13 @@ use std::time::Instant;
 
 fn main() {
     let mut image = imread("data/tree.jpg", IMREAD_COLOR).unwrap();
+    println!(
+        "Image size:         {} × {} = {} pixels",
+        image.cols(),
+        image.rows(),
+        image.cols() * image.rows()
+    );
+    println!();
 
     // Apply smoothing to suppress digitization artifacts.
     image = blur_image(&mut image, 0.8f64, 5).unwrap();
@@ -27,15 +34,10 @@ fn main() {
     let done = Instant::now();
 
     let duration = done - start;
-
-    println!(
-        "Image size:         {} × {} = {} pixels",
-        image.cols(),
-        image.rows(),
-        image.cols() * image.rows()
-    );
-    println!("Num. segments:      {}", result.num_components);
     println!("Duration:           {} ms", duration.as_millis());
+
+    println!();
+    println!("Num. segments:      {}", result.num_components);
 
     let mut min = 0f64;
     let mut max = 0f64;
@@ -91,7 +93,7 @@ fn draw_contours(image: &Mat, labels: &Mat) -> opencv::Result<Mat> {
     assert_eq!(image.cols(), labels.cols());
     assert_eq!(labels.typ(), CV_32SC1);
 
-    let mut contours =
+    let contours =
         Mat::new_rows_cols_with_default(image.rows(), image.cols(), CV_8UC3, Scalar::all(0f64))?;
     let color = Vec3b::all(0); // black contours
 

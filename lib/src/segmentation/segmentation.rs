@@ -54,10 +54,53 @@ where
     /// - The matrix in `CV_32SC1` format containing the labels for each pixel.
     /// - The number of segments / components.
     pub fn segment_image(&mut self, image: &Mat) -> SegmentationResult {
+        // To enable printing of measurements, use RUSTFLAGS="--cfg measure"
+        #[cfg(measure)]
+        let start = std::time::Instant::now();
+
         self.build_graph(&image);
+
+        #[cfg(measure)]
+        let section = {
+            println!(
+                "Building the graph: {} ms",
+                (std::time::Instant::now() - start).as_millis()
+            );
+            std::time::Instant::now()
+        };
+
         self.oversegment_graph();
+
+        #[cfg(measure)]
+        let section = {
+            println!(
+                "Oversegmentation:   {} ms",
+                (std::time::Instant::now() - section).as_millis()
+            );
+            std::time::Instant::now()
+        };
+
         self.enforce_minimum_segment_size(self.segment_size);
+
+        #[cfg(measure)]
+        let section = {
+            println!(
+                "Segment size:       {} ms",
+                (std::time::Instant::now() - section).as_millis()
+            );
+            std::time::Instant::now()
+        };
+
         let segmentation = self.derive_labels();
+
+        #[cfg(measure)]
+        {
+            println!(
+                "Label extraction:   {} ms",
+                (std::time::Instant::now() - section).as_millis()
+            );
+        }
+
         let num_components = self.graph.num_components();
         SegmentationResult {
             segmentation,
@@ -221,7 +264,7 @@ where
     ///
     /// Labels as an integer matrix.
     fn derive_labels(&self) -> Mat {
-        let mut labels = Mat::new_rows_cols_with_default(
+        let labels = Mat::new_rows_cols_with_default(
             self.height as i32,
             self.width as i32,
             CV_32SC1,
