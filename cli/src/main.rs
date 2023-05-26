@@ -110,28 +110,27 @@ fn draw_contours(image: &Mat, labels: &Mat) -> opencv::Result<Mat> {
 
 /// Check if the given pixel is a boundary pixel in the given segmentation.
 fn is_4connected_boundary_pixel(labels: &Mat, row: i32, col: i32) -> opencv::Result<bool> {
-    if row > 0 {
-        if labels.at_2d::<i32>(row, col)? != labels.at_2d::<i32>(row - 1, col)? {
-            return Ok(true);
-        }
+    let pixel = labels.at_2d::<i32>(row, col)?;
+
+    let not_left = row > 0;
+    let not_right = row < labels.rows() - 1;
+    let not_top = col > 0;
+    let not_bottom = col < labels.cols() - 1;
+
+    if not_left && pixel != labels.at_2d::<i32>(row - 1, col)? {
+        return Ok(true);
     }
 
-    if row < labels.rows() - 1 {
-        if labels.at_2d::<i32>(row, col)? != labels.at_2d::<i32>(row + 1, col)? {
-            return Ok(true);
-        }
+    if not_right && pixel != labels.at_2d::<i32>(row + 1, col)? {
+        return Ok(true);
     }
 
-    if col > 0 {
-        if labels.at_2d::<i32>(row, col)? != labels.at_2d::<i32>(row, col - 1)? {
-            return Ok(true);
-        }
+    if not_top && pixel != labels.at_2d::<i32>(row, col - 1)? {
+        return Ok(true);
     }
 
-    if col < labels.cols() - 1 {
-        if labels.at_2d::<i32>(row, col)? != labels.at_2d::<i32>(row, col + 1)? {
-            return Ok(true);
-        }
+    if not_bottom && pixel != labels.at_2d::<i32>(row, col + 1)? {
+        return Ok(true);
     }
 
     return Ok(false);

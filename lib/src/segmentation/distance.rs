@@ -1,4 +1,4 @@
-use crate::graph::ImageNodeColor;
+use crate::ImageNodeColor;
 
 /// Trait to be implemented by a concrete distance. The distance defines
 /// how the weights between nodes in the image graph are computed. See the paper

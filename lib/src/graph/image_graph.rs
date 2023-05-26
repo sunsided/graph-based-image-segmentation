@@ -354,16 +354,10 @@ impl Edges {
 
     /// Sorts the edges by weight.
     pub fn sort_by_weight(&mut self) {
-        self.edges.sort_by(|a, b| {
+        self.edges.sort_unstable_by(|a, b| {
             let a = a.get();
             let b = b.get();
-
-            // Main sorting is by edge weight ascending.
-            // In order to improve cache coherency during processing, we then sort by index.
-            let ord_w = a.w.partial_cmp(&b.w).unwrap();
-            let ord_n = a.n.partial_cmp(&b.n).unwrap();
-            let ord_m = a.m.partial_cmp(&b.m).unwrap();
-            ord_w.then(ord_n).then(ord_m)
+            a.cmp(&b)
         });
     }
 

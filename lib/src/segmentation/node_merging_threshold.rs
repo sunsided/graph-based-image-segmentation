@@ -1,5 +1,5 @@
 use crate::graph::{ImageEdge, ImageNode};
-use crate::segmentation::NodeMerging;
+use crate::NodeMerging;
 use std::cell::Cell;
 
 /// The original criterion described in

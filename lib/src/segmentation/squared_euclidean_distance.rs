@@ -1,5 +1,4 @@
-use crate::graph::ImageNodeColor;
-use crate::segmentation::Distance;
+use crate::{Distance, ImageNodeColor};
 
 /// Squared Euclidean RGB distance.
 ///

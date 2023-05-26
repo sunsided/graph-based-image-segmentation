@@ -15,4 +15,5 @@ pub use manhattan_distance::ManhattanRGB;
 pub use node_merging::NodeMerging;
 pub use node_merging_threshold::NodeMergingThreshold;
 pub use segmentation::Segmentation;
+pub use segmentation_result::SegmentationResult;
 pub use squared_euclidean_distance::SquaredEuclideanRGB;

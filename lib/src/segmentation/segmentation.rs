@@ -1,6 +1,5 @@
-use crate::graph::{ImageEdge, ImageGraph, ImageNode, ImageNodeColor};
-use crate::segmentation::segmentation_result::SegmentationResult;
-use crate::segmentation::{Distance, NodeMerging};
+use crate::graph::{ImageEdge, ImageGraph, ImageNode};
+use crate::{Distance, ImageNodeColor, NodeMerging, SegmentationResult};
 use opencv::core::{Scalar, Vec3b, CV_32SC1};
 use opencv::prelude::*;
 
