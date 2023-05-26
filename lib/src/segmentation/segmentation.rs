@@ -1,4 +1,5 @@
 use crate::graph::{ImageEdge, ImageGraph, ImageNode, ImageNodeColor};
+use crate::segmentation::segmentation_result::SegmentationResult;
 use crate::segmentation::{Distance, NodeMerging};
 use opencv::core::{Scalar, Vec3b, CV_32SC1};
 use opencv::prelude::*;
@@ -53,13 +54,16 @@ where
     /// A tuple consisting of
     /// - The matrix in `CV_32SC1` format containing the labels for each pixel.
     /// - The number of segments / components.
-    pub fn segment_image(&mut self, image: &Mat) -> (Mat, usize) {
+    pub fn segment_image(&mut self, image: &Mat) -> SegmentationResult {
         self.build_graph(&image);
         self.oversegment_graph();
         self.enforce_minimum_segment_size(self.segment_size);
         let segmentation = self.derive_labels();
-        let num_nodes = self.graph.num_components();
-        (segmentation, num_nodes)
+        let num_components = self.graph.num_components();
+        SegmentationResult {
+            segmentation,
+            num_components,
+        }
     }
 
     /// Build the graph based on the image, i.e. compute the weights

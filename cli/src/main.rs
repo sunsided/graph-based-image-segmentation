@@ -23,7 +23,7 @@ fn main() {
     );
 
     let start = Instant::now();
-    let (labels, num_segments) = segmenter.segment_image(&image);
+    let result = segmenter.segment_image(&image);
     let done = Instant::now();
 
     let duration = done - start;
@@ -34,7 +34,7 @@ fn main() {
         image.rows(),
         image.cols() * image.rows()
     );
-    println!("Num. segments:      {}", num_segments);
+    println!("Num. segments:      {}", result.num_components);
     println!("Duration:           {} ms", duration.as_millis());
 
     let mut min = 0f64;
@@ -42,7 +42,7 @@ fn main() {
     let mut min_loc = Point::default();
     let mut max_loc = Point::default();
     min_max_loc(
-        &labels,
+        &result.segmentation,
         Some(&mut min),
         Some(&mut max),
         Some(&mut min_loc),
@@ -52,7 +52,8 @@ fn main() {
     .unwrap();
 
     let mut labels_out = Mat::default();
-    labels
+    result
+        .segmentation
         .convert_to(&mut labels_out, CV_8UC1, 255f64 / max, 0f64)
         .unwrap();
 
@@ -66,7 +67,7 @@ fn main() {
 
     imwrite("labels.jpg", &labels_colored, &Vector::default()).unwrap();
 
-    let contours = draw_contours(&image, &labels).unwrap();
+    let contours = draw_contours(&image, &result.segmentation).unwrap();
     imwrite("contours.jpg", &contours, &Vector::default()).unwrap();
 }
 

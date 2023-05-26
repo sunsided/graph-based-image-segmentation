@@ -42,6 +42,7 @@ impl ImageGraph {
     /// # Arguments
     ///
     /// * `n` - The number of nodes to allocate.
+    #[allow(dead_code)]
     pub fn reset(&mut self, n: usize) {
         self.k.replace(n);
         self.nodes = Nodes::allocated(n);
@@ -206,12 +207,8 @@ impl ImageGraph {
 
 impl Nodes {
     pub fn allocated(n: usize) -> Self {
-        let mut nodes = vec![Default::default(); n];
-        let mut colors = vec![Default::default(); n];
-        /*for _ in 0..n {
-            nodes.push(Cell::new(ImageNode::default()));
-            colors.push(Cell::new(ImageNodeColor::default()));
-        }*/
+        let nodes = vec![Default::default(); n];
+        let colors = vec![Default::default(); n];
         Self {
             nodes,
             node_colors: colors,
