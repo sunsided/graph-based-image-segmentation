@@ -1,5 +1,7 @@
 use crate::graph::{ImageEdge, ImageNode, ImageNodeColor};
+use std::ascii::escape_default;
 use std::cell::Cell;
+use veccell::{VecCell, VecRef};
 
 /// Represents an image graph, consisting of one node per pixel which are 4-connected.
 #[derive(Debug, Clone, Default)]
@@ -12,15 +14,32 @@ pub struct ImageGraph {
     edges: Edges,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Nodes {
-    nodes: Vec<Cell<ImageNode>>,
-    node_colors: Vec<Cell<ImageNodeColor>>,
+    nodes: VecCell<ImageNode>,
+    node_colors: VecCell<ImageNodeColor>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Edges {
-    edges: Vec<Cell<ImageEdge>>,
+    edges: VecCell<ImageEdge>,
+}
+
+impl Default for Nodes {
+    fn default() -> Self {
+        Self {
+            nodes: VecCell::new(),
+            node_colors: VecCell::new(),
+        }
+    }
+}
+
+impl Default for Edges {
+    fn default() -> Self {
+        Self {
+            edges: VecCell::new(),
+        }
+    }
 }
 
 impl ImageGraph {
@@ -120,7 +139,7 @@ impl ImageGraph {
     /// # Return
     ///
     /// The node at index `n`.
-    pub fn node_at(&self, n: usize) -> &Cell<ImageNode> {
+    pub fn node_at(&self, n: usize) -> VecRef<ImageNode> {
         self.nodes.at(n)
     }
 
@@ -134,7 +153,7 @@ impl ImageGraph {
     ///
     /// The node at index `n`.
     #[inline(always)]
-    pub fn node_color_at(&self, n: usize) -> &Cell<ImageNodeColor> {
+    pub fn node_color_at(&self, n: usize) -> VecRef<ImageNodeColor> {
         self.nodes.color_at(n)
     }
 
@@ -149,7 +168,7 @@ impl ImageGraph {
     /// The ID of the node at index `n`.
     #[inline(always)]
     pub fn node_id_at(&self, n: usize) -> usize {
-        let id = self.nodes.at(n).get().id;
+        let id = self.nodes.at(n).id;
         debug_assert_eq!(id, n); // TODO: Remove this method call.
         id
     }
@@ -163,7 +182,7 @@ impl ImageGraph {
     /// # Return
     ///
     /// The edge at index `n`.
-    pub fn edge_at(&self, n: usize) -> &Cell<ImageEdge> {
+    pub fn edge_at(&self, n: usize) -> VecRef<ImageEdge> {
         self.edges.at(n)
     }
 
@@ -208,34 +227,12 @@ impl ImageGraph {
 
 impl Nodes {
     pub fn allocated(n: usize) -> Self {
-        let nodes = vec![Default::default(); n];
-        let colors = vec![Default::default(); n];
+        let nodes = VecCell::from(vec![Default::default(); n]);
+        let colors = VecCell::from(vec![Default::default(); n]);
         Self {
             nodes,
             node_colors: colors,
         }
-    }
-
-    /// Set the node of the given index.
-    ///
-    /// # Arguments
-    ///
-    /// * `n` - The index of the node.
-    /// * `node` - The node to set.
-    #[allow(dead_code)]
-    pub fn set(&mut self, n: usize, node: ImageNode) {
-        assert!(n < self.nodes.len());
-        self.nodes[n].replace(node);
-    }
-
-    /// Add a new node.
-    ///
-    /// # Arguments
-    ///
-    /// * `node` - The node to add.
-    #[allow(dead_code)]
-    pub fn add(&mut self, node: ImageNode) {
-        self.nodes.push(Cell::new(node))
     }
 
     /// Get a reference to the n-th node.
@@ -247,9 +244,9 @@ impl Nodes {
     /// # Return
     ///
     /// The node at index `n`.
-    pub fn at(&self, n: usize) -> &Cell<ImageNode> {
+    pub fn at(&self, n: usize) -> VecRef<ImageNode> {
         assert!(n < self.nodes.len());
-        &self.nodes[n]
+        self.nodes.borrow(n).unwrap()
     }
 
     /// Get a reference to the n-th node color.
@@ -262,9 +259,9 @@ impl Nodes {
     ///
     /// The node at index `n`.
     #[inline(always)]
-    pub fn color_at(&self, n: usize) -> &Cell<ImageNodeColor> {
+    pub fn color_at(&self, n: usize) -> VecRef<ImageNodeColor> {
         assert!(n < self.node_colors.len());
-        &self.node_colors[n]
+        self.node_colors.borrow(n).unwrap()
     }
 
     /// When two nodes get merged, the first node is assigned the id of the second
@@ -280,7 +277,7 @@ impl Nodes {
     ///
     /// The node representing the found component.
     pub fn find_component_at(&self, index: usize) -> usize {
-        let mut n = self.nodes[index].get();
+        let mut n = self.nodes.borrow_mut(index).unwrap();
         debug_assert_eq!(n.id, index);
         if n.label == n.id {
             return index;
@@ -291,7 +288,7 @@ impl Nodes {
         let mut id = n.id;
 
         while l != id {
-            let token = self.nodes[l].get();
+            let token = self.nodes.borrow(l).unwrap();
             l = token.label;
             id = token.id;
         }
@@ -299,12 +296,11 @@ impl Nodes {
         // If the found component is identical to the originally provided index, we must not borrow again.
         debug_assert_ne!(l, index);
 
-        let s = self.nodes[l].get();
+        let s = self.nodes.borrow(l).unwrap();
         debug_assert_eq!(s.label, s.id);
 
         // Save latest component.
         n.label = s.id;
-        self.nodes[index].set(n);
         l
     }
 
@@ -321,7 +317,7 @@ impl Edges {
     ///
     /// * `edge` - The edge to add.
     pub fn add(&mut self, edge: ImageEdge) {
-        self.edges.push(Cell::new(edge))
+        self.edges.push(edge)
     }
 
     /// Add new edges.
@@ -347,16 +343,17 @@ impl Edges {
     /// # Return
     ///
     /// The edge at index `n`.
-    pub fn at(&self, n: usize) -> &Cell<ImageEdge> {
+    pub fn at(&self, n: usize) -> VecRef<ImageEdge> {
         assert!(n < self.edges.len());
-        &self.edges[n]
+        self.edges.borrow(n).unwrap()
     }
 
     /// Sorts the edges by weight.
     pub fn sort_by_weight(&mut self) {
         self.edges.sort_unstable_by(|a, b| {
-            let a = a.get();
-            let b = b.get();
+            // SAFETY: Self is already mutably borrowed, so no concurrent access is possible.
+            let a = unsafe { &(*a.as_ptr()) };
+            let b = unsafe { &(*b.as_ptr()) };
             a.cmp(&b)
         });
     }

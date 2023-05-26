@@ -12,6 +12,7 @@ categories = ["computer-vision", "multimedia::images"]
 
 [dependencies]
 opencv = { version = "0.82.0", default-features = false, features = ["imgcodecs"] }
+veccell = "0.4.0"
 
 [dev-dependencies]
 criterion = "0.5.0"
