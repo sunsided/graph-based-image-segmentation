@@ -29,7 +29,28 @@ pub struct ImageNodeColor {
 
 impl ImageNodeColor {
     #[inline(always)]
+    pub const fn new_rgb(r: u8, g: u8, b: u8) -> Self {
+        Self { b, g, r }
+    }
+
+    #[inline(always)]
     pub const fn new_bgr(b: u8, g: u8, r: u8) -> Self {
         Self { b, g, r }
+    }
+}
+
+impl From<(u8, u8, u8)> for ImageNodeColor {
+    fn from(value: (u8, u8, u8)) -> Self {
+        ImageNodeColor::new_rgb(value.0, value.1, value.2)
+    }
+}
+
+impl From<(f32, f32, f32)> for ImageNodeColor {
+    fn from(value: (f32, f32, f32)) -> Self {
+        ImageNodeColor::new_rgb(
+            (value.0 * 255.0).clamp(0.0, 255.0) as u8,
+            (value.1 * 255.0).clamp(0.0, 255.0) as u8,
+            (value.2 * 255.0).clamp(0.0, 255.0) as u8,
+        )
     }
 }

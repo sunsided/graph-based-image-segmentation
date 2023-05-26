@@ -6,17 +6,28 @@ use crate::segmentation::Distance;
 /// ## Example
 /// ```
 /// use graph_based_image_segmentation::{Distance, ImageNodeColor, ManhattanRGB};
-/// let a = ImageNodeColor::new_bgr(0, 0, 0);
-/// let b = ImageNodeColor::new_bgr(0, 255, 255);
 /// let distance = ManhattanRGB::default();
-/// assert_eq!(distance.distance(&a, &b), 0.6666667);
+/// assert_eq!(distance.distance(&(0, 0, 0).into(), &(0, 0, 0).into()), 0.0);
+/// assert_eq!(distance.distance(&(0, 0, 0).into(), &(0, 255, 0).into()), 0.33333334);
+/// assert_eq!(distance.distance(&(0, 0, 0).into(), &(0, 255, 255).into()), 0.6666667);
+/// assert_eq!(distance.distance(&(0, 0, 0).into(), &(255, 255, 255).into()), 1.0);
 /// ```
 pub struct ManhattanRGB {}
 
 unsafe impl Sync for ManhattanRGB {}
 unsafe impl Send for ManhattanRGB {}
 
-const NORMALIZATION_TERM: f32 = 255f32 + 255f32 + 255f32;
+const NORMALIZATION_TERM: f32 = 1.0 / (255f32 * 3f32);
+
+impl ManhattanRGB {
+    #[inline(always)]
+    pub fn distance(&self, n: &ImageNodeColor, m: &ImageNodeColor) -> f32 {
+        let dr = n.r as isize - m.r as isize;
+        let dg = n.g as isize - m.g as isize;
+        let db = n.b as isize - m.b as isize;
+        ((dr.abs() + dg.abs() + db.abs()) as f32) * NORMALIZATION_TERM
+    }
+}
 
 impl Default for ManhattanRGB {
     fn default() -> Self {
@@ -27,9 +38,6 @@ impl Default for ManhattanRGB {
 impl Distance for ManhattanRGB {
     #[inline(always)]
     fn distance(&self, n: &ImageNodeColor, m: &ImageNodeColor) -> f32 {
-        let dr = n.r as f32 - m.r as f32;
-        let dg = n.g as f32 - m.g as f32;
-        let db = n.b as f32 - m.b as f32;
-        (dr.abs() + dg.abs() + db.abs()) / NORMALIZATION_TERM
+        self.distance(n, m)
     }
 }

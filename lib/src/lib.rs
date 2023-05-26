@@ -53,4 +53,5 @@ pub use graph::ImageNodeColor;
 
 pub use segmentation::{
     Distance, EuclideanRGB, ManhattanRGB, NodeMerging, NodeMergingThreshold, Segmentation,
+    SquaredEuclideanRGB,
 };
