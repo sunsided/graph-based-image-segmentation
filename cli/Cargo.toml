@@ -9,5 +9,5 @@ categories = ["command-line-utilities"]
 publish = false
 
 [dependencies]
-opencv = { version = "0.84.5", default-features = false, features = ["imgproc", "clang-runtime"] }
+opencv = { version = "0.84.5", default-features = false, features = ["imgproc"] }
 graph-based-image-segmentation = { path = "../lib", version = "*" }

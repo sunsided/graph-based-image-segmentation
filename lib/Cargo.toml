@@ -11,11 +11,11 @@ keywords = ["graphics", "image-processing"]
 categories = ["computer-vision", "multimedia::images"]
 
 [dependencies]
-opencv = { version = "0.84.5", default-features = false, features = ["imgcodecs", "clang-runtime"] }
+opencv = { version = "0.84.5", default-features = false, features = ["imgcodecs"] }
 
 [dev-dependencies]
 criterion = "0.5.1"
-opencv = { version = "0.84.5", default-features = false, features = ["imgproc", "clang-runtime"] }
+opencv = { version = "0.84.5", default-features = false, features = ["imgproc"] }
 
 [[bench]]
 name = "performance"
